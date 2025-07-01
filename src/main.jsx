@@ -7,7 +7,8 @@ import SignUp from "./components/SignUp";
 import "./index.css";
 import Profile from "./components/Profile";
 import Query from "./components/Query";
-
+import Coupons from "./components/Coupons";
+import MyCoupons from "./components/MyCoupons";
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
@@ -17,6 +18,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/signup" element={<SignUp />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/query" element={<Query />} />
+        <Route path="/coupons" element={<Coupons />} />    
+        <Route path="/my-coupons" element={<MyCoupons />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

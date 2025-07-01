@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import {
   Utensils,
   Hotel,
@@ -31,13 +32,14 @@ const Categories = () => {
       <h2 className="text-3xl font-bold mb-10">Explore Deals by Category</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
         {categories.map((cat, index) => (
-          <div
+          <Link
             key={index}
+            to={`/coupons?category=${encodeURIComponent(cat.name)}`}
             className="border border-gray-200 bg-white py-6 px-2 rounded-lg shadow-sm hover:shadow-md transition text-sm font-medium text-gray-700 flex flex-col items-center"
           >
             {cat.icon}
             <span>{cat.name}</span>
-          </div>
+          </Link>
         ))}
       </div>
     </section>

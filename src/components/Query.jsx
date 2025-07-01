@@ -3,15 +3,7 @@ import Navbar from "./Navbar";
 
 const Query = () => {
   const [user, setUser] = useState(null);
-  const [messages, setMessages] = useState([
-    { text: 'Hi, I have an issue with my recent food coupon for "Gourmet Burgers"...', time: "10:00 AM", isUser: false },
-    { text: "Hello, sorry to hear that. Can you please provide the coupon code or order ID?", time: "10:02 AM", isUser: true },
-    { text: "The coupon code is GB54321, and order ID is #CB00123.", time: "10:05 AM", isUser: false },
-    { text: "Thank you. Let me check the details for you. Please wait a moment.", time: "10:06 AM", isUser: true },
-    { text: "It seems there was a system error. I’ve extended the validity by 7 days.", time: "10:08 AM", isUser: true },
-    { text: "Great, thank you so much!", time: "10:09 AM", isUser: false },
-    { text: "You’re most welcome!", time: "10:10 AM", isUser: true },
-  ]);
+  const [messages, setMessages] = useState([ ]);
 
   const [input, setInput] = useState("");
 

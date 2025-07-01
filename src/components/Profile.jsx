@@ -17,14 +17,14 @@ const Profile = () => {
 
   useEffect(() => {
     const storedPrefs = JSON.parse(localStorage.getItem("preferences"));
-    const storedUser = JSON.parse(localStorage.getItem("loggedInUser")); // ✅ updated to use session
+    const storedUser = JSON.parse(localStorage.getItem("loggedInUser"));
 
     if (storedPrefs) setPreferences(storedPrefs);
     if (storedUser) {
       setUser(storedUser);
       setEditedUser(storedUser);
     } else {
-      setUser(null); // fallback to guest view
+      setUser(null);
     }
   }, []);
 
@@ -49,7 +49,7 @@ const Profile = () => {
       setUser(updatedUser);
       setEditedUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
-      localStorage.setItem("loggedInUser", JSON.stringify(updatedUser)); // ✅ sync session
+      localStorage.setItem("loggedInUser", JSON.stringify(updatedUser));
     };
     reader.readAsDataURL(file);
   };
@@ -62,7 +62,7 @@ const Profile = () => {
   const handleSaveProfile = () => {
     setUser(editedUser);
     localStorage.setItem("user", JSON.stringify(editedUser));
-    localStorage.setItem("loggedInUser", JSON.stringify(editedUser)); // ✅ sync session
+    localStorage.setItem("loggedInUser", JSON.stringify(editedUser));
     setEditMode(false);
     alert("Profile updated!");
   };
@@ -138,7 +138,6 @@ const Profile = () => {
                 Edit Profile
               </button>
             )}
-            <button className="border text-sm px-4 py-2 rounded text-gray-700">Add Funds</button>
           </div>
         </div>
 
@@ -168,8 +167,90 @@ const Profile = () => {
 
           <div className="bg-white p-6 rounded-lg shadow-sm">
             <h3 className="font-semibold text-lg mb-4">Add Money to Wallet</h3>
-            <input type="number" placeholder="Enter amount" className="w-full px-4 py-2 border rounded-md mb-4" />
-            <button className="w-full bg-brandBlue text-white py-2 rounded hover:bg-[#2DA7ED]">Add Now</button>
+            <input
+              type="number"
+              placeholder="Enter amount"
+              value={editedUser.walletAmount || ""}
+              onChange={(e) =>
+                setEditedUser((prev) => ({
+                  ...prev,
+                  walletAmount: e.target.value,
+                }))
+              }
+              className="w-full px-4 py-2 border rounded-md mb-4"
+            />
+
+            <select
+              value={editedUser.paymentMethod || ""}
+              onChange={(e) =>
+                setEditedUser((prev) => ({
+                  ...prev,
+                  paymentMethod: e.target.value,
+                }))
+              }
+              className="w-full px-4 py-2 border rounded-md mb-4"
+            >
+              <option value="">Select Payment Method</option>
+              <option value="gpay">Google Pay</option>
+              <option value="upi">UPI</option>
+              <option value="paypal">PayPal</option>
+            </select>
+
+            {editedUser.paymentMethod === "gpay" && (
+              <input
+                type="text"
+                placeholder="Google Pay UPI ID"
+                className="w-full px-4 py-2 border rounded-md mb-4"
+                required
+              />
+            )}
+            {editedUser.paymentMethod === "upi" && (
+              <input
+                type="text"
+                placeholder="Enter UPI ID"
+                className="w-full px-4 py-2 border rounded-md mb-4"
+                required
+              />
+            )}
+            {editedUser.paymentMethod === "paypal" && (
+              <input
+                type="email"
+                placeholder="PayPal Email"
+                className="w-full px-4 py-2 border rounded-md mb-4"
+                required
+              />
+            )}
+
+            <button
+              onClick={() => {
+                const amount = parseFloat(editedUser.walletAmount);
+                if (!amount || amount <= 0) {
+                  alert("Enter a valid amount.");
+                  return;
+                }
+                if (!editedUser.paymentMethod) {
+                  alert("Please select a payment method.");
+                  return;
+                }
+
+                const updated = {
+                  ...editedUser,
+                  wallet: `₹${(
+                    parseFloat(user?.wallet?.replace("₹", "") || 0) +
+                    amount
+                  ).toFixed(2)}`,
+                };
+
+                setUser(updated);
+                setEditedUser(updated);
+                localStorage.setItem("user", JSON.stringify(updated));
+                localStorage.setItem("loggedInUser", JSON.stringify(updated));
+                alert("Amount added successfully!");
+              }}
+              className="w-full bg-brandBlue text-white py-2 rounded hover:bg-[#2DA7ED]"
+            >
+              Add Now
+            </button>
           </div>
         </div>
 

@@ -27,9 +27,11 @@ const Navbar = () => {
 
         <div className="hidden md:flex space-x-6 text-sm text-gray-700 font-medium">
           <Link to="/" className="hover:text-brandBlue">Homepage</Link>
-          <a href="#" className="hover:text-brandBlue">Coupon Details page</a>
+          <Link to="/coupons" className="hover:text-brandBlue">Coupons</Link>
+
           <Link to="/profile" className="hover:text-brandBlue">Profile Page</Link>
-          <a href="#" className="hover:text-brandBlue">My Coupons</a>
+          <Link to="/my-coupons" className="hover:text-brandBlue">My Coupons</Link>
+
           <Link to="/query" className="hover:text-brandBlue">Query Page</Link>
         </div>
 
@@ -72,7 +74,7 @@ const Navbar = () => {
       {isMobileMenuOpen && (
         <div className="mt-4 md:hidden space-y-4 text-sm text-gray-700">
           <Link to="/" className="block hover:text-brandBlue">Homepage</Link>
-          <a href="#" className="block hover:text-brandBlue">Coupon Details page</a>
+          <Link to="/coupons" className="hover:text-brandBlue">Coupons</Link>
           <Link to="/profile" className="block hover:text-brandBlue">Profile Page</Link>
           <a href="#" className="block hover:text-brandBlue">My Coupons</a>
           <Link to="/query" className="block hover:text-brandBlue">Query Page</Link>

@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom"; // ✅ Import Link
 
 const CTA = () => {
   return (
@@ -7,9 +8,11 @@ const CTA = () => {
       <p className="mb-6 max-w-xl mx-auto text-lg">
         Sign up for EzyFix today and get instant access to exclusive deals and personalized offers. Your wallet will thank you!
       </p>
-      <button className="bg-white text-brandBlue font-semibold px-6 py-3 rounded hover:bg-gray-100">
-        Get Your First Coupons Now!
-      </button>
+      <Link to="/coupons">
+        <button className="bg-white text-brandBlue font-semibold px-6 py-3 rounded hover:bg-gray-100">
+          Get Your First Coupons Now!
+        </button>
+      </Link>
     </section>
   );
 };

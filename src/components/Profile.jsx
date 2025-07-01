@@ -11,26 +11,60 @@ const preferenceOptions = [
 
 const Profile = () => {
   const [preferences, setPreferences] = useState([]);
+  const [user, setUser] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editedUser, setEditedUser] = useState({});
 
-  // Load preferences from localStorage on mount
   useEffect(() => {
     const storedPrefs = JSON.parse(localStorage.getItem("preferences"));
-    if (storedPrefs) {
-      setPreferences(storedPrefs);
+    const storedUser = JSON.parse(localStorage.getItem("loggedInUser")); // ✅ updated to use session
+
+    if (storedPrefs) setPreferences(storedPrefs);
+    if (storedUser) {
+      setUser(storedUser);
+      setEditedUser(storedUser);
+    } else {
+      setUser(null); // fallback to guest view
     }
   }, []);
 
   const togglePreference = (pref) => {
     setPreferences((prev) =>
-      prev.includes(pref)
-        ? prev.filter((p) => p !== pref)
-        : [...prev, pref]
+      prev.includes(pref) ? prev.filter((p) => p !== pref) : [...prev, pref]
     );
   };
 
   const savePreferences = () => {
     localStorage.setItem("preferences", JSON.stringify(preferences));
     alert("Preferences saved!");
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const updatedUser = { ...user, avatar: reader.result };
+      setUser(updatedUser);
+      setEditedUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      localStorage.setItem("loggedInUser", JSON.stringify(updatedUser)); // ✅ sync session
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditedUser((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaveProfile = () => {
+    setUser(editedUser);
+    localStorage.setItem("user", JSON.stringify(editedUser));
+    localStorage.setItem("loggedInUser", JSON.stringify(editedUser)); // ✅ sync session
+    setEditMode(false);
+    alert("Profile updated!");
   };
 
   return (
@@ -43,19 +77,67 @@ const Profile = () => {
         {/* Top Section */}
         <div className="bg-white rounded-lg shadow-sm p-6 flex flex-col md:flex-row items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
-            <img
-              src="https://randomuser.me/api/portraits/women/44.jpg"
-              alt="User"
-              className="w-16 h-16 rounded-full object-cover"
-            />
+            <label className="relative group">
+              <img
+                src={user?.avatar || "https://via.placeholder.com/150"}
+                alt="User"
+                className="w-16 h-16 rounded-full object-cover border cursor-pointer hover:opacity-80"
+              />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+              />
+              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition text-xs text-white rounded-full">
+                Change
+              </div>
+            </label>
             <div>
-              <h2 className="text-lg font-semibold">Jessica Doe</h2>
-              <p className="text-sm text-gray-500">jessica.couponqueen@email.com</p>
-              <p className="text-xs text-gray-400">ID: 01291 • Wallet: ₹120.50</p>
+              {editMode ? (
+                <>
+                  <input
+                    type="text"
+                    name="name"
+                    value={editedUser.name || ""}
+                    onChange={handleInputChange}
+                    className="text-lg font-semibold border px-2 py-1 rounded w-full"
+                  />
+                  <input
+                    type="email"
+                    name="email"
+                    value={editedUser.email || ""}
+                    onChange={handleInputChange}
+                    className="text-sm text-gray-500 border px-2 py-1 rounded w-full mt-1"
+                  />
+                </>
+              ) : (
+                <>
+                  <h2 className="text-lg font-semibold">{user?.name || "Guest User"}</h2>
+                  <p className="text-sm text-gray-500">{user?.email || "user@example.com"}</p>
+                </>
+              )}
+              <p className="text-xs text-gray-400">
+                ID: {user?.id || "00000"} • Wallet: {user?.wallet || "₹0.00"}
+              </p>
             </div>
           </div>
           <div className="mt-4 md:mt-0 space-x-2">
-            <button className="bg-brandBlue text-white text-sm px-4 py-2 rounded hover:bg-[#2DA7ED]">Edit Profile</button>
+            {editMode ? (
+              <button
+                onClick={handleSaveProfile}
+                className="bg-green-600 text-white text-sm px-4 py-2 rounded hover:bg-green-700"
+              >
+                Save
+              </button>
+            ) : (
+              <button
+                onClick={() => setEditMode(true)}
+                className="bg-brandBlue text-white text-sm px-4 py-2 rounded hover:bg-[#2DA7ED]"
+              >
+                Edit Profile
+              </button>
+            )}
             <button className="border text-sm px-4 py-2 rounded text-gray-700">Add Funds</button>
           </div>
         </div>
@@ -84,7 +166,6 @@ const Profile = () => {
             </div>
           </div>
 
-          {/* Wallet */}
           <div className="bg-white p-6 rounded-lg shadow-sm">
             <h3 className="font-semibold text-lg mb-4">Add Money to Wallet</h3>
             <input type="number" placeholder="Enter amount" className="w-full px-4 py-2 border rounded-md mb-4" />

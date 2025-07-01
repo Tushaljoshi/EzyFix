@@ -7,6 +7,7 @@ import SignUp from "./components/SignUp";
 import "./index.css";
 import Profile from "./components/Profile";
 import Query from "./components/Query";
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>

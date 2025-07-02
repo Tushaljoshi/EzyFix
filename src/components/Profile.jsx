@@ -110,11 +110,20 @@ const Profile = () => {
                     onChange={handleInputChange}
                     className="text-sm text-gray-500 border px-2 py-1 rounded w-full mt-1"
                   />
+                  <input
+                    type="text"
+                    name="phone"
+                    placeholder="Mobile Number"
+                    value={editedUser.phone || ""}
+                    onChange={handleInputChange}
+                    className="text-sm text-gray-500 border px-2 py-1 rounded w-full mt-1"
+                  />
                 </>
               ) : (
                 <>
                   <h2 className="text-lg font-semibold">{user?.name || "Guest User"}</h2>
                   <p className="text-sm text-gray-500">{user?.email || "user@example.com"}</p>
+                  <p className="text-sm text-gray-500">{user?.phone || "No mobile number"}</p>
                 </>
               )}
               <p className="text-xs text-gray-400">
@@ -148,7 +157,14 @@ const Profile = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm mb-1 text-gray-600">Change Password</label>
-                <input type="password" className="w-full px-4 py-2 border rounded-md" />
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="New Password"
+                  value={editedUser.password || ""}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border rounded-md"
+                />
               </div>
               <div>
                 <label className="block text-sm mb-1 text-gray-600">Bank/UPI for refunds</label>
@@ -196,18 +212,14 @@ const Profile = () => {
               <option value="paypal">PayPal</option>
             </select>
 
-            {editedUser.paymentMethod === "gpay" && (
-              <input
-                type="text"
-                placeholder="Google Pay UPI ID"
-                className="w-full px-4 py-2 border rounded-md mb-4"
-                required
-              />
-            )}
-            {editedUser.paymentMethod === "upi" && (
+            {(editedUser.paymentMethod === "gpay" || editedUser.paymentMethod === "upi") && (
               <input
                 type="text"
                 placeholder="Enter UPI ID"
+                value={editedUser.upiId || ""}
+                onChange={(e) =>
+                  setEditedUser((prev) => ({ ...prev, upiId: e.target.value }))
+                }
                 className="w-full px-4 py-2 border rounded-md mb-4"
                 required
               />
@@ -216,36 +228,64 @@ const Profile = () => {
               <input
                 type="email"
                 placeholder="PayPal Email"
+                value={editedUser.paypalEmail || ""}
+                onChange={(e) =>
+                  setEditedUser((prev) => ({ ...prev, paypalEmail: e.target.value }))
+                }
                 className="w-full px-4 py-2 border rounded-md mb-4"
                 required
               />
             )}
 
             <button
-              onClick={() => {
+              onClick={async () => {
                 const amount = parseFloat(editedUser.walletAmount);
+                const method = editedUser.paymentMethod;
+                const upi = editedUser.upiId || "";
+                const paypal = editedUser.paypalEmail || "";
+
                 if (!amount || amount <= 0) {
                   alert("Enter a valid amount.");
                   return;
                 }
-                if (!editedUser.paymentMethod) {
+                if (!method) {
                   alert("Please select a payment method.");
                   return;
                 }
+                if ((method === "gpay" || method === "upi") && !upi.trim()) {
+                  alert("Please enter a valid UPI ID.");
+                  return;
+                }
+                if (method === "paypal" && !paypal.trim()) {
+                  alert("Please enter your PayPal email.");
+                  return;
+                }
 
-                const updated = {
-                  ...editedUser,
-                  wallet: `₹${(
-                    parseFloat(user?.wallet?.replace("₹", "") || 0) +
-                    amount
-                  ).toFixed(2)}`,
-                };
+                const pin = prompt("Enter your 4-digit PIN to confirm the transaction:");
+                if (!pin || pin.length !== 4) {
+                  alert("Invalid PIN. Transaction cancelled.");
+                  return;
+                }
 
-                setUser(updated);
-                setEditedUser(updated);
-                localStorage.setItem("user", JSON.stringify(updated));
-                localStorage.setItem("loggedInUser", JSON.stringify(updated));
-                alert("Amount added successfully!");
+                setTimeout(() => {
+                  const updatedWallet = (
+                    parseFloat(user?.wallet?.replace("₹", "") || 0) + amount
+                  ).toFixed(2);
+                  const updated = {
+                    ...editedUser,
+                    wallet: `₹${updatedWallet}`,
+                    upiId: "",
+                    paypalEmail: "",
+                    walletAmount: "",
+                    paymentMethod: "",
+                  };
+
+                  setUser(updated);
+                  setEditedUser(updated);
+                  localStorage.setItem("user", JSON.stringify(updated));
+                  localStorage.setItem("loggedInUser", JSON.stringify(updated));
+                  alert("✅ Payment successful! ₹" + amount + " added to your wallet.");
+                }, 1000);
               }}
               className="w-full bg-brandBlue text-white py-2 rounded hover:bg-[#2DA7ED]"
             >

@@ -1,42 +1,37 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "./Navbar";
 
-const preferenceOptions = [
-  "Food & Dining",
-  "Fashion & Apparel",
-  "Travel & Experience",
-  "Health & Wellness",
-  "Fitness & Services",
-];
-
 const Profile = () => {
-  const [preferences, setPreferences] = useState([]);
   const [user, setUser] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [editedUser, setEditedUser] = useState({});
+  const [verifyEmail, setVerifyEmail] = useState("");
+  const [verifyPassword, setVerifyPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [generatedOtp, setGeneratedOtp] = useState(null);
+  const [otpVerified, setOtpVerified] = useState(false);
 
   useEffect(() => {
-    const storedPrefs = JSON.parse(localStorage.getItem("preferences"));
     const storedUser = JSON.parse(localStorage.getItem("loggedInUser"));
-
-    if (storedPrefs) setPreferences(storedPrefs);
     if (storedUser) {
       setUser(storedUser);
       setEditedUser(storedUser);
-    } else {
-      setUser(null);
     }
   }, []);
 
-  const togglePreference = (pref) => {
-    setPreferences((prev) =>
-      prev.includes(pref) ? prev.filter((p) => p !== pref) : [...prev, pref]
-    );
+  const generateOTP = () => {
+    const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedOtp(newOtp);
+    alert("OTP sent to your email: " + newOtp);
   };
 
-  const savePreferences = () => {
-    localStorage.setItem("preferences", JSON.stringify(preferences));
-    alert("Preferences saved!");
+  const verifyOTP = () => {
+    if (otp === generatedOtp) {
+      setOtpVerified(true);
+      alert("OTP verified successfully.");
+    } else {
+      alert("Invalid OTP. Please try again.");
+    }
   };
 
   const handleImageChange = (e) => {
@@ -60,28 +55,43 @@ const Profile = () => {
   };
 
   const handleSaveProfile = () => {
-    setUser(editedUser);
+    if (
+      editedUser.password !== user.password &&
+      (verifyEmail !== user.email || verifyPassword !== user.password || !otpVerified)
+    ) {
+      alert("Verification failed. Please enter correct email, password, and OTP.");
+      return;
+    }
+
+    const { password, ...safeUser } = editedUser;
+    setUser(safeUser);
     localStorage.setItem("user", JSON.stringify(editedUser));
     localStorage.setItem("loggedInUser", JSON.stringify(editedUser));
     setEditMode(false);
+    setOtpVerified(false);
     alert("Profile updated!");
   };
 
+  const handleSignOut = () => {
+    localStorage.clear();
+    alert("Signed out. All user data and coupon history cleared.");
+    window.location.reload();
+  };
+
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-[#f9fbfd] min-h-screen">
       <Navbar />
 
-      <div className="max-w-6xl mx-auto px-4 py-10">
-        <h1 className="text-2xl font-bold mb-6">Your Profile</h1>
+      <div className="max-w-4xl mx-auto px-4 py-10">
+        <h1 className="text-3xl font-bold mb-6 text-center text-brandBlue">Account Settings</h1>
 
-        {/* Top Section */}
-        <div className="bg-white rounded-lg shadow-sm p-6 flex flex-col md:flex-row items-center justify-between mb-8">
-          <div className="flex items-center space-x-4">
+        <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
+          <div className="flex flex-col items-center space-y-4">
             <label className="relative group">
               <img
                 src={user?.avatar || "https://via.placeholder.com/150"}
                 alt="User"
-                className="w-16 h-16 rounded-full object-cover border cursor-pointer hover:opacity-80"
+                className="w-32 h-32 rounded-full object-cover border cursor-pointer hover:opacity-80"
               />
               <input
                 type="file"
@@ -89,11 +99,12 @@ const Profile = () => {
                 onChange={handleImageChange}
                 className="absolute inset-0 opacity-0 cursor-pointer"
               />
-              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition text-xs text-white rounded-full">
+              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition text-sm text-white rounded-full font-bold">
                 Change
               </div>
             </label>
-            <div>
+
+            <div className="w-full font-bold">
               {editMode ? (
                 <>
                   <input
@@ -101,231 +112,226 @@ const Profile = () => {
                     name="name"
                     value={editedUser.name || ""}
                     onChange={handleInputChange}
-                    className="text-lg font-semibold border px-2 py-1 rounded w-full"
+                    className="w-full border px-3 py-2 rounded mb-2"
+                    placeholder="Full Name"
                   />
                   <input
                     type="email"
                     name="email"
                     value={editedUser.email || ""}
                     onChange={handleInputChange}
-                    className="text-sm text-gray-500 border px-2 py-1 rounded w-full mt-1"
+                    className="w-full border px-3 py-2 rounded mb-2"
+                    placeholder="Email Address"
                   />
                   <input
                     type="text"
                     name="phone"
-                    placeholder="Mobile Number"
                     value={editedUser.phone || ""}
                     onChange={handleInputChange}
-                    className="text-sm text-gray-500 border px-2 py-1 rounded w-full mt-1"
+                    className="w-full border px-3 py-2 rounded mb-2"
+                    placeholder="Mobile Number"
                   />
+                  <input
+                    type="text"
+                    name="address"
+                    value={editedUser.address || ""}
+                    onChange={handleInputChange}
+                    className="w-full border px-3 py-2 rounded mb-2"
+                    placeholder="Address"
+                  />
+                  <input
+                    type="date"
+                    name="dob"
+                    value={editedUser.dob || ""}
+                    onChange={handleInputChange}
+                    className="w-full border px-3 py-2 rounded mb-2"
+                  />
+                  <input
+                    type="text"
+                    name="gender"
+                    value={editedUser.gender || ""}
+                    onChange={handleInputChange}
+                    className="w-full border px-3 py-2 rounded mb-2"
+                    placeholder="Gender"
+                  />
+
+                  <div className="border-t pt-4">
+                    <input
+                      type="email"
+                      value={verifyEmail}
+                      onChange={(e) => setVerifyEmail(e.target.value)}
+                      className="w-full border px-3 py-2 rounded mb-2"
+                      placeholder="Enter your current email to verify"
+                    />
+                    <input
+                      type="password"
+                      value={verifyPassword}
+                      onChange={(e) => setVerifyPassword(e.target.value)}
+                      className="w-full border px-3 py-2 rounded mb-2"
+                      placeholder="Enter current password to verify"
+                    />
+                    <div className="flex items-center gap-2 mb-2">
+                      <input
+                        type="text"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
+                        className="w-full border px-3 py-2 rounded"
+                        placeholder="Enter OTP"
+                      />
+                      <button
+                        onClick={generateOTP}
+                        className="bg-blue-500 text-white px-3 py-1 rounded font-bold hover:bg-blue-600"
+                      >
+                        Send OTP
+                      </button>
+                      <button
+                        onClick={verifyOTP}
+                        className="bg-green-600 text-white px-3 py-1 rounded font-bold hover:bg-green-700"
+                      >
+                        Verify OTP
+                      </button>
+                    </div>
+                    <input
+                      type="password"
+                      name="password"
+                      value={editedUser.password || ""}
+                      onChange={handleInputChange}
+                      className="w-full border px-3 py-2 rounded"
+                      placeholder="New Password"
+                    />
+                  </div>
                 </>
               ) : (
                 <>
-                  <h2 className="text-lg font-semibold">{user?.name || "Guest User"}</h2>
-                  <p className="text-sm text-gray-500">{user?.email || "user@example.com"}</p>
-                  <p className="text-sm text-gray-500">{user?.phone || "No mobile number"}</p>
+                  <h2 className="text-xl font-bold text-center">{user?.name || "Guest User"}</h2>
+                  <p className="text-sm text-center">{user?.email || "user@example.com"}</p>
+                  <p className="text-sm text-center">{user?.phone || "No mobile number"}</p>
+                  {user?.address && <p className="text-sm text-center">{user.address}</p>}
+                  {user?.dob && <p className="text-sm text-center">DOB: {user.dob}</p>}
+                  {user?.gender && <p className="text-sm text-center">Gender: {user.gender}</p>}
                 </>
               )}
-              <p className="text-xs text-gray-400">
-                ID: {user?.id || "00000"} • Wallet: {user?.wallet || "₹0.00"}
-              </p>
             </div>
-          </div>
-          <div className="mt-4 md:mt-0 space-x-2">
-            {editMode ? (
-              <button
-                onClick={handleSaveProfile}
-                className="bg-green-600 text-white text-sm px-4 py-2 rounded hover:bg-green-700"
-              >
-                Save
-              </button>
-            ) : (
-              <button
-                onClick={() => setEditMode(true)}
-                className="bg-brandBlue text-white text-sm px-4 py-2 rounded hover:bg-[#2DA7ED]"
-              >
-                Edit Profile
-              </button>
-            )}
-          </div>
-        </div>
 
-        {/* Settings + Wallet */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm md:col-span-2">
-            <h3 className="font-semibold text-lg mb-4">Account Settings</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm mb-1 text-gray-600">Change Password</label>
-                <input
-                  type="password"
-                  name="password"
-                  placeholder="New Password"
-                  value={editedUser.password || ""}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border rounded-md"
-                />
-              </div>
-              <div>
-                <label className="block text-sm mb-1 text-gray-600">Bank/UPI for refunds</label>
-                <input type="text" className="w-full px-4 py-2 border rounded-md" />
-              </div>
-              <div>
-                <label className="block text-sm mb-1 text-gray-600">Privacy Settings</label>
-                <select className="w-full px-4 py-2 border rounded-md">
-                  <option>Public</option>
-                  <option>Private</option>
-                  <option>Only Me</option>
-                </select>
-              </div>
+            <p className="text-xs text-gray-500 font-semibold">
+              ID: {user?.id || "00000"} • Wallet: 🪙 {user?.wallet || "0"}
+            </p>
+
+            <div className="flex gap-4 mt-4">
+              {editMode ? (
+                <button
+                  onClick={handleSaveProfile}
+                  className="bg-green-600 text-white px-6 py-2 rounded font-bold hover:bg-green-700"
+                >
+                  Save
+                </button>
+              ) : (
+                <button
+                  onClick={() => setEditMode(true)}
+                  className="bg-brandBlue text-white px-6 py-2 rounded font-bold hover:bg-[#2DA7ED]"
+                >
+                  Edit Profile
+                </button>
+              )}
+              <button
+                onClick={handleSignOut}
+                className="bg-red-500 text-white px-6 py-2 rounded font-bold hover:bg-red-600"
+              >
+                Sign Out
+              </button>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm">
-            <h3 className="font-semibold text-lg mb-4">Add Money to Wallet</h3>
-            <input
-              type="number"
-              placeholder="Enter amount"
-              value={editedUser.walletAmount || ""}
-              onChange={(e) =>
-                setEditedUser((prev) => ({
-                  ...prev,
-                  walletAmount: e.target.value,
-                }))
-              }
-              className="w-full px-4 py-2 border rounded-md mb-4"
-            />
+          {/* Wallet Top-up Section */}
+          <div className="bg-gray-50 p-6 rounded mt-10 border">
+            <h2 className="text-xl font-bold mb-4 text-brandBlue">Add Coins to Wallet</h2>
 
+            <label className="block font-semibold mb-2">Select Payment Method</label>
             <select
               value={editedUser.paymentMethod || ""}
               onChange={(e) =>
-                setEditedUser((prev) => ({
-                  ...prev,
-                  paymentMethod: e.target.value,
-                }))
+                setEditedUser({ ...editedUser, paymentMethod: e.target.value })
               }
-              className="w-full px-4 py-2 border rounded-md mb-4"
+              className="w-full p-2 border rounded mb-4"
             >
-              <option value="">Select Payment Method</option>
-              <option value="gpay">Google Pay</option>
+              <option value="">-- Choose Method --</option>
+              <option value="googlepay">Google Pay</option>
               <option value="upi">UPI</option>
               <option value="paypal">PayPal</option>
             </select>
 
-            {(editedUser.paymentMethod === "gpay" || editedUser.paymentMethod === "upi") && (
+            {editedUser.paymentMethod === "googlepay" && (
+              <>
+                <input
+                  type="text"
+                  placeholder="Google Pay Number"
+                  className="w-full p-2 border rounded mb-2"
+                  onChange={(e) =>
+                    setEditedUser({ ...editedUser, gpayNumber: e.target.value })
+                  }
+                />
+                <input
+                  type="text"
+                  placeholder="Linked Bank"
+                  className="w-full p-2 border rounded mb-2"
+                  onChange={(e) =>
+                    setEditedUser({ ...editedUser, gpayBank: e.target.value })
+                  }
+                />
+              </>
+            )}
+
+            {editedUser.paymentMethod === "upi" && (
               <input
                 type="text"
                 placeholder="Enter UPI ID"
-                value={editedUser.upiId || ""}
+                className="w-full p-2 border rounded mb-2"
                 onChange={(e) =>
-                  setEditedUser((prev) => ({ ...prev, upiId: e.target.value }))
+                  setEditedUser({ ...editedUser, upiId: e.target.value })
                 }
-                className="w-full px-4 py-2 border rounded-md mb-4"
-                required
               />
             )}
+
             {editedUser.paymentMethod === "paypal" && (
               <input
                 type="email"
                 placeholder="PayPal Email"
-                value={editedUser.paypalEmail || ""}
+                className="w-full p-2 border rounded mb-2"
                 onChange={(e) =>
-                  setEditedUser((prev) => ({ ...prev, paypalEmail: e.target.value }))
+                  setEditedUser({ ...editedUser, paypalEmail: e.target.value })
                 }
-                className="w-full px-4 py-2 border rounded-md mb-4"
-                required
               />
             )}
 
+            <input
+              type="number"
+              placeholder="Amount (1 Coin = ₹1)"
+              className="w-full p-2 border rounded mb-4"
+              onChange={(e) =>
+                setEditedUser({
+                  ...editedUser,
+                  topupAmount: parseFloat(e.target.value),
+                })
+              }
+            />
+
             <button
-              onClick={async () => {
-                const amount = parseFloat(editedUser.walletAmount);
-                const method = editedUser.paymentMethod;
-                const upi = editedUser.upiId || "";
-                const paypal = editedUser.paypalEmail || "";
-
-                if (!amount || amount <= 0) {
-                  alert("Enter a valid amount.");
-                  return;
-                }
-                if (!method) {
-                  alert("Please select a payment method.");
-                  return;
-                }
-                if ((method === "gpay" || method === "upi") && !upi.trim()) {
-                  alert("Please enter a valid UPI ID.");
-                  return;
-                }
-                if (method === "paypal" && !paypal.trim()) {
-                  alert("Please enter your PayPal email.");
-                  return;
-                }
-
-                const pin = prompt("Enter your 4-digit PIN to confirm the transaction:");
-                if (!pin || pin.length !== 4) {
-                  alert("Invalid PIN. Transaction cancelled.");
-                  return;
-                }
-
-                setTimeout(() => {
-                  const updatedWallet = (
-                    parseFloat(user?.wallet?.replace("₹", "") || 0) + amount
-                  ).toFixed(2);
-                  const updated = {
-                    ...editedUser,
-                    wallet: `₹${updatedWallet}`,
-                    upiId: "",
-                    paypalEmail: "",
-                    walletAmount: "",
-                    paymentMethod: "",
-                  };
-
-                  setUser(updated);
-                  setEditedUser(updated);
-                  localStorage.setItem("user", JSON.stringify(updated));
-                  localStorage.setItem("loggedInUser", JSON.stringify(updated));
-                  alert("✅ Payment successful! ₹" + amount + " added to your wallet.");
-                }, 1000);
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full font-bold"
+              onClick={() => {
+                const amount = editedUser.topupAmount || 0;
+                if (!amount || amount <= 0) return alert("Enter a valid amount.");
+                const updatedUser = {
+                  ...user,
+                  wallet: (parseFloat(user.wallet || 0) + amount).toFixed(2),
+                };
+                setUser(updatedUser);
+                localStorage.setItem("loggedInUser", JSON.stringify(updatedUser));
+                alert(`✅ ₹${amount} added to your wallet.`);
               }}
-              className="w-full bg-brandBlue text-white py-2 rounded hover:bg-[#2DA7ED]"
             >
-              Add Now
+              Add Coins
             </button>
           </div>
-        </div>
-
-        {/* Preferences */}
-        <div className="bg-white p-6 rounded-lg shadow-sm">
-          <h3 className="font-semibold text-lg mb-4 text-gray-800">Coupon Preferences</h3>
-          <p className="text-sm text-gray-500 mb-6">Choose the categories you're most interested in:</p>
-
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {preferenceOptions.map((pref, i) => (
-              <div
-                key={i}
-                className="flex justify-between items-center bg-gray-50 border hover:border-brandBlue rounded-lg px-4 py-2 transition"
-              >
-                <span className="text-sm font-medium text-gray-700">{pref}</span>
-                <label className="relative inline-flex items-center cursor-pointer w-11 h-6">
-                  <input
-                    type="checkbox"
-                    checked={preferences.includes(pref)}
-                    onChange={() => togglePreference(pref)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-full h-full bg-gray-300 rounded-full peer-checked:bg-brandBlue transition-colors duration-300"></div>
-                  <div className="absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 peer-checked:translate-x-5"></div>
-                </label>
-              </div>
-            ))}
-          </div>
-
-          <button
-            onClick={savePreferences}
-            className="mt-6 bg-brandBlue text-white px-6 py-2 rounded-md hover:bg-[#2DA7ED] transition"
-          >
-            Save Preferences
-          </button>
         </div>
       </div>
     </div>

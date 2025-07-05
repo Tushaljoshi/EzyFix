@@ -5,19 +5,21 @@ import { Menu, X } from "lucide-react";
 const Navbar = () => {
   const [user, setUser] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    const stored = localStorage.getItem("loggedInUser"); // ✅ fetch active session
+    const stored = localStorage.getItem("loggedInUser");
     if (stored) {
       setUser(JSON.parse(stored));
     }
   }, []);
 
-  const handleSignOut = () => {
-    localStorage.removeItem("loggedInUser"); // ✅ remove active session
-    setUser(null);
-    navigate("/signin");
+  const handleSearch = (e) => {
+    if (e.key === "Enter" && searchQuery.trim()) {
+      navigate(`/coupons?search=${encodeURIComponent(searchQuery.trim())}`);
+      setIsMobileMenuOpen(false);
+    }
   };
 
   return (
@@ -26,13 +28,11 @@ const Navbar = () => {
         <div className="text-2xl font-bold text-brandBlue">EzyFix</div>
 
         <div className="hidden md:flex space-x-6 text-sm text-gray-700 font-medium">
-          <Link to="/" className="hover:text-brandBlue">Homepage</Link>
+          <Link to="/" className="hover:text-brandBlue">Home</Link>
           <Link to="/coupons" className="hover:text-brandBlue">Coupons</Link>
-
-          <Link to="/profile" className="hover:text-brandBlue">Profile Page</Link>
           <Link to="/my-coupons" className="hover:text-brandBlue">My Coupons</Link>
-
-          <Link to="/query" className="hover:text-brandBlue">Query Page</Link>
+          <Link to="/query" className="hover:text-brandBlue">Query</Link>
+          <Link to="/profile" className="hover:text-brandBlue">My Profile</Link>
         </div>
 
         <div className="hidden md:flex items-center space-x-3">
@@ -42,26 +42,21 @@ const Navbar = () => {
               <Link to="/signup" className="bg-brandBlue text-white text-sm px-4 py-2 rounded hover:bg-[#2DA7ED]">Sign Up</Link>
             </>
           ) : (
-            <>
-              <Link to="/profile">
-                <img
-                  src={user.avatar || "https://via.placeholder.com/32"}
-                  alt="User"
-                  className="w-8 h-8 rounded-full object-cover border"
-                />
-              </Link>
-              <button
-                onClick={handleSignOut}
-                className="text-sm text-gray-600 hover:text-red-500"
-              >
-                Sign Out
-              </button>
-            </>
+            <Link to="/profile">
+              <img
+                src={user.avatar || "https://via.placeholder.com/32"}
+                alt="User"
+                className="w-8 h-8 rounded-full object-cover border"
+              />
+            </Link>
           )}
 
           <input
             type="text"
             placeholder="Search deals..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleSearch}
             className="px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brandBlue text-sm w-44"
           />
         </div>
@@ -75,9 +70,9 @@ const Navbar = () => {
         <div className="mt-4 md:hidden space-y-4 text-sm text-gray-700">
           <Link to="/" className="block hover:text-brandBlue">Homepage</Link>
           <Link to="/coupons" className="hover:text-brandBlue">Coupons</Link>
-          <Link to="/profile" className="block hover:text-brandBlue">Profile Page</Link>
-          <a href="#" className="block hover:text-brandBlue">My Coupons</a>
+          <Link to="/my-coupons" className="block hover:text-brandBlue">My Coupons</Link>
           <Link to="/query" className="block hover:text-brandBlue">Query Page</Link>
+          <Link to="/profile" className="block hover:text-brandBlue">Profile Page</Link>
 
           {!user ? (
             <>
@@ -85,29 +80,24 @@ const Navbar = () => {
               <Link to="/signup" className="block text-white bg-brandBlue px-4 py-2 rounded hover:bg-[#2DA7ED]">Sign Up</Link>
             </>
           ) : (
-            <>
-              <Link to="/profile" className="block">
-                <div className="flex items-center space-x-2">
-                  <img
-                    src={user.avatar || "https://via.placeholder.com/32"}
-                    alt="User"
-                    className="w-8 h-8 rounded-full border object-cover"
-                  />
-                  <span className="text-sm">{user.name || "Your Profile"}</span>
-                </div>
-              </Link>
-              <button
-                onClick={handleSignOut}
-                className="text-left w-full text-red-500 hover:underline"
-              >
-                Sign Out
-              </button>
-            </>
+            <Link to="/profile" className="block">
+              <div className="flex items-center space-x-2">
+                <img
+                  src={user.avatar || "https://via.placeholder.com/32"}
+                  alt="User"
+                  className="w-8 h-8 rounded-full border object-cover"
+                />
+                <span className="text-sm">{user.name || "Your Profile"}</span>
+              </div>
+            </Link>
           )}
 
           <input
             type="text"
             placeholder="Search deals..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleSearch}
             className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brandBlue text-sm"
           />
         </div>

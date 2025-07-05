@@ -1,18 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 const categories = [
-  "Restaurants",
-  "Hotels & Travel",
-  "Online Shopping",
-  "Health & Wellness",
-  "Activities & Events",
-  "Spas & Experiences",
-  "Beauty & Salon",
-  "Education",
-  "Fitness & Sports",
-  "Entertainment",
+  "Restaurants", "Hotels & Travel", "Online Shopping", "Health & Wellness",
+  "Activities & Events", "Spas & Experiences", "Beauty & Salon", "Education",
+  "Fitness & Sports", "Entertainment",
 ];
 
 const sampleImages = [
@@ -36,6 +30,19 @@ const Coupons = () => {
   const [visibleReviews, setVisibleReviews] = useState(2);
   const [newReview, setNewReview] = useState({ name: "", rating: 5, comment: "" });
   const [reviews, setReviews] = useState(initialReviews);
+  const [filteredCategories, setFilteredCategories] = useState(categories);
+  const location = useLocation();
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const query = searchParams.get("search")?.toLowerCase();
+    if (query) {
+      const matched = categories.filter((cat) => cat.toLowerCase().includes(query));
+      setFilteredCategories(matched.length > 0 ? matched : []);
+    } else {
+      setFilteredCategories(categories);
+    }
+  }, [location.search]);
 
   const handleLoadMore = () => setVisibleCount((prev) => prev + 4);
   const handleLoadMoreReviews = () => setVisibleReviews((prev) => Math.min(prev + 2, reviews.length));
@@ -50,30 +57,23 @@ const Coupons = () => {
 
   const addToCart = (coupon) => {
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (!user) {
-      alert("Please sign in to add coupons to your cart.");
-      return;
-    }
-
-    if (!coupon.available) {
-      alert("Sorry, this coupon is no longer available.");
-      return;
-    }
+    if (!user) return alert("Please sign in to add coupons to your cart.");
+    if (!coupon.available) return alert("Sorry, this coupon is no longer available.");
 
     const cart = JSON.parse(localStorage.getItem("cartCoupons")) || [];
     const newCoupon = {
       id: Date.now(),
       title: coupon.title,
-      discount: "₹250 OFF",
+      discount: `🪙250 OFF`,
       validTill: coupon.validity,
       status: "In Cart",
     };
-    const updatedCart = [...cart, newCoupon];
-    localStorage.setItem("cartCoupons", JSON.stringify(updatedCart));
+    localStorage.setItem("cartCoupons", JSON.stringify([...cart, newCoupon]));
     alert("Coupon added to cart!");
     setSelectedCoupon(null);
   };
 
+  // ✅ Updated function to purchase and store the coupon
   const handleBuyNow = (coupon) => {
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
     if (!user) {
@@ -86,24 +86,47 @@ const Coupons = () => {
       return;
     }
 
-    const pin = prompt("Enter your wallet PIN to confirm purchase:");
-    if (pin !== user.pin) {
-      alert("Incorrect PIN. Transaction cancelled.");
-      return;
-    }
+    const quantity = coupon.quantity || 1;
+    const totalPrice = quantity * 250;
+    const currentBalance = parseFloat(user.wallet || 0);
 
-    const price = coupon.quantity * 250;
-    const currentBalance = parseFloat(user.wallet.replace("₹", ""));
-    if (currentBalance < price) {
+    if (currentBalance < totalPrice) {
       alert("Insufficient wallet balance.");
       return;
     }
 
-    const newBalance = currentBalance - price;
-    user.wallet = `₹${newBalance.toFixed(2)}`;
+    const confirmPurchase = window.confirm(`Buy ${quantity} coupon(s) for 🪙${totalPrice}?`);
+    if (!confirmPurchase) return;
+
+    // Update wallet
+    const newBalance = currentBalance - totalPrice;
+    user.wallet = newBalance;
     localStorage.setItem("loggedInUser", JSON.stringify(user));
 
-    alert(`Coupon purchased successfully! ₹${price} deducted from your wallet.`);
+    // Save to purchasedCoupons
+    const purchased = JSON.parse(localStorage.getItem("purchasedCoupons")) || [];
+    const newCoupon = {
+      id: Date.now(),
+      title: coupon.title,
+      discount: `🪙${totalPrice} OFF`,
+      validTill: coupon.validity,
+      quantity,
+      status: "Active",
+    };
+    localStorage.setItem("purchasedCoupons", JSON.stringify([...purchased, newCoupon]));
+
+    // Save to transaction history
+    const history = JSON.parse(localStorage.getItem("transactionHistory")) || [];
+    const transaction = {
+      id: Date.now(),
+      title: coupon.title,
+      amount: totalPrice,
+      type: "Purchase",
+      date: new Date().toLocaleString(),
+    };
+    localStorage.setItem("transactionHistory", JSON.stringify([...history, transaction]));
+
+    alert("✅ Coupon purchased successfully!");
     setSelectedCoupon(null);
   };
 
@@ -111,7 +134,7 @@ const Coupons = () => {
     setSelectedCoupon({
       title: `${category} Deal #${index + 1}`,
       image: sampleImages[index % sampleImages.length],
-      price: "₹250.00",
+      price: "🪙250",
       description: `Save up to 50% off on top ${category.toLowerCase()} offers.`,
       validity: "31st Dec 2025",
       quantity: 1,
@@ -128,50 +151,56 @@ const Coupons = () => {
             Browse Coupons by Category
           </h1>
 
-          {categories.map((category, idx) => (
-            <div key={idx} className="mb-10">
-              <h2 className="text-2xl font-semibold mb-4 text-gray-800">{category}</h2>
-              <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
-                {[...Array(visibleCount).keys()].map((i) => (
-                  <div
-                    key={i}
-                    className="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer"
-                    onClick={() => openCouponModal(category, i)}
-                  >
-                    <img
-                      src={sampleImages[i % sampleImages.length]}
-                      alt="Coupon"
-                      className="w-full h-40 object-cover"
-                    />
-                    <div className="p-4">
-                      <h3 className="font-semibold text-lg text-gray-700">
-                        {category} Deal #{i + 1}
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-1">
-                        Save up to 50% off on top {category.toLowerCase()} offers.
-                      </p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        Expiry: 31st Dec 2025
-                      </p>
-                      <button className="mt-4 w-full bg-brandBlue text-white py-1.5 rounded hover:bg-[#2DA7ED] text-sm">
-                        Grab Coupon
-                      </button>
+          {filteredCategories.length > 0 ? (
+            filteredCategories.map((category, idx) => (
+              <div key={idx} className="mb-10">
+                <h2 className="text-2xl font-semibold mb-4 text-gray-800">{category}</h2>
+                <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
+                  {[...Array(visibleCount).keys()].map((i) => (
+                    <div
+                      key={i}
+                      className="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer"
+                      onClick={() => openCouponModal(category, i)}
+                    >
+                      <img
+                        src={sampleImages[i % sampleImages.length]}
+                        alt="Coupon"
+                        className="w-full h-40 object-cover"
+                      />
+                      <div className="p-4">
+                        <h3 className="font-semibold text-lg text-gray-700">
+                          {category} Deal #{i + 1}
+                        </h3>
+                        <p className="text-sm text-gray-500 mt-1">
+                          Save up to 50% off on top {category.toLowerCase()} offers.
+                        </p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          Expiry: 31st Dec 2025
+                        </p>
+                        <button className="mt-4 w-full bg-brandBlue text-white py-1.5 rounded hover:bg-[#2DA7ED] text-sm">
+                          Grab Coupon
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+                <div className="flex justify-center mt-6">
+                  <button
+                    onClick={handleLoadMore}
+                    className="text-brandBlue font-semibold hover:underline"
+                  >
+                    Load More
+                  </button>
+                </div>
               </div>
-              <div className="flex justify-center mt-6">
-                <button
-                  onClick={handleLoadMore}
-                  className="text-brandBlue font-semibold hover:underline"
-                >
-                  Load More
-                </button>
-              </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="text-center text-gray-600">No matching categories found.</p>
+          )}
         </div>
       </div>
+
+      {/* Modal */}
       {selectedCoupon && (
         <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex justify-center items-center overflow-y-auto px-4 py-6">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-5xl mx-auto relative p-6 max-h-[95vh] overflow-y-auto">
@@ -200,12 +229,9 @@ const Coupons = () => {
                   <label className="block font-medium text-sm mb-1">Quantity</label>
                   <select
                     className="border p-2 rounded w-full"
-                    value={selectedCoupon.quantity || 1}
+                    value={selectedCoupon.quantity}
                     onChange={(e) =>
-                      setSelectedCoupon({
-                        ...selectedCoupon,
-                        quantity: parseInt(e.target.value),
-                      })
+                      setSelectedCoupon({ ...selectedCoupon, quantity: parseInt(e.target.value) })
                     }
                   >
                     {[...Array(10)].map((_, i) => (
@@ -216,13 +242,13 @@ const Coupons = () => {
                   </select>
                 </div>
                 <p className="text-sm text-gray-600 mb-3">
-                  Total: <strong>₹{(selectedCoupon.quantity * 250).toLocaleString("en-IN")}.00</strong>
+                  Total: <strong>🪙{selectedCoupon.quantity * 250}</strong>
                 </p>
                 <button
                   onClick={() => addToCart(selectedCoupon)}
                   className="w-full bg-brandBlue text-white py-2 rounded mb-2 hover:bg-[#2DA7ED]"
                 >
-                  Add {selectedCoupon.quantity || 1} to Cart
+                  Add {selectedCoupon.quantity} to Cart
                 </button>
                 <button
                   onClick={() => handleBuyNow(selectedCoupon)}
@@ -233,6 +259,7 @@ const Coupons = () => {
               </div>
             </div>
 
+            {/* Reviews */}
             <div className="mt-6">
               <h3 className="text-lg font-bold mb-2">Customer Reviews</h3>
               {reviews.slice(0, visibleReviews).map((review, index) => (
@@ -253,6 +280,7 @@ const Coupons = () => {
                 </button>
               )}
 
+              {/* Add Review */}
               <div className="mt-4">
                 <h4 className="font-semibold mb-2">Add Your Review</h4>
                 <input

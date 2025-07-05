@@ -25,17 +25,8 @@ const Navbar = () => {
   return (
     <nav className="bg-white shadow-sm px-4 py-3 md:px-6">
       <div className="flex justify-between items-center">
-        {/* LOGO + BRAND */}
-        <Link to="/" className="flex items-center space-x-2">
-          <img
-            src="/LOGO PNG 2-01.png"
-            alt="EzyFix Logo"
-            className="h-10 w-auto object-contain"
-          />
-          <span className="text-2xl font-bold text-brandBlue hidden sm:inline">EzyFix</span>
-        </Link>
+        <div className="text-2xl font-bold text-brandBlue">EzyFix</div>
 
-        {/* Desktop Menu */}
         <div className="hidden md:flex space-x-6 text-sm text-gray-700 font-medium">
           <Link to="/" className="hover:text-brandBlue">Home</Link>
           <Link to="/coupons" className="hover:text-brandBlue">Coupons</Link>
@@ -44,7 +35,6 @@ const Navbar = () => {
           <Link to="/profile" className="hover:text-brandBlue">My Profile</Link>
         </div>
 
-        {/* User / Auth Buttons / Search */}
         <div className="hidden md:flex items-center space-x-3">
           {!user ? (
             <>
@@ -71,17 +61,15 @@ const Navbar = () => {
           />
         </div>
 
-        {/* Mobile Menu Button */}
         <button className="md:hidden" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
           {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
       </div>
 
-      {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="mt-4 md:hidden space-y-4 text-sm text-gray-700">
           <Link to="/" className="block hover:text-brandBlue">Homepage</Link>
-          <Link to="/coupons" className="block hover:text-brandBlue">Coupons</Link>
+          <Link to="/coupons" className="hover:text-brandBlue">Coupons</Link>
           <Link to="/my-coupons" className="block hover:text-brandBlue">My Coupons</Link>
           <Link to="/query" className="block hover:text-brandBlue">Query Page</Link>
           <Link to="/profile" className="block hover:text-brandBlue">Profile Page</Link>
@@ -119,4 +107,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-n

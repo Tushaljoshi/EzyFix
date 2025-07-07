@@ -44,7 +44,7 @@ const Hero = () => {
           </motion.p>
           <Link
             to="/coupons"
-            className="bg-brandBlue text-white px-6 py-3 text-lg font-bold rounded-md hover:bg-gray-100 transition shadow-lg"
+            className="bg-white text-brandBlue px-6 py-3 text-lg font-bold rounded-md hover:bg-gray-100 transition shadow-lg"
           >
             Start Saving Now →
           </Link>
@@ -93,6 +93,7 @@ const Hero = () => {
 
       {/* Decorative Shapes or Icons */}
       <div className="absolute -top-16 -left-16 w-72 h-72 bg-brandBlue/20 rounded-full blur-3xl z-0"></div>
+      <div className="absolute bottom-0 right-0 w-80 h-80 bg-brandBlue/20 rounded-full blur-2xl z-0"></div>
     </motion.section>
   );
 };

@@ -20,7 +20,7 @@ const Hero = () => {
       <motion.section
         className="relative bg-cover bg-center text-white py-28 px-6"
         style={{
-          backgroundImage: url('https://source.unsplash.com/1600x900/?shopping,sale,coupons'),
+          backgroundImage: `url('https://source.unsplash.com/1600x900/?shopping,sale,coupons')`,
         }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

@@ -88,11 +88,12 @@ const Hero = () => {
           >
             Sign Up for Free
           </Link>
+
         </motion.div>
       </div>
 
       {/* Decorative Shapes or Icons */}
-      <div className="absolute -top-16 -left-16 w-72 h-72 bg-brandBlue/20 rounded-full blur-3xl z-0"></div>
+      <div className="absolute -top-16 -left-16 w-72 h-72 bg-brandBlue/10 rounded-full blur-3xl z-0"></div>
       <div className="absolute bottom-0 right-0 w-80 h-80 bg-brandBlue/20 rounded-full blur-2xl z-0"></div>
     </motion.section>
   );

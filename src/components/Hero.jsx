@@ -88,7 +88,11 @@ const Hero = () => {
           >
             Sign Up for Free
           </Link>
-
+          <Link
+            to="/coupons"
+            className="text-brandBlue font-semibold hover:underline"
+          >
+          </Link>
         </motion.div>
       </div>
 

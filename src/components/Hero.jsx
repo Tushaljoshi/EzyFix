@@ -44,7 +44,7 @@ const Hero = () => {
           </motion.p>
           <Link
             to="/coupons"
-            className="bg-white text-brandBlue px-6 py-3 text-lg font-bold rounded-md hover:bg-gray-100 transition shadow-lg"
+            className="bg-brandBlue text-white px-6 py-3 text-lg font-bold rounded-md hover:bg-gray-100 transition shadow-lg"
           >
             Start Saving Now →
           </Link>

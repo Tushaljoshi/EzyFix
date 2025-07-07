@@ -83,15 +83,10 @@ const Hero = () => {
           transition={{ delay: 0.4 }}
         >
           <Link
-            to="/signup"
+            to="/SignUp"
             className="bg-brandBlue text-white px-6 py-3 text-lg font-semibold rounded-md hover:bg-[#2DA7ED] shadow-lg"
           >
             Sign Up for Free
-          </Link>
-          <Link
-            to="/coupons"
-            className="text-brandBlue font-semibold hover:underline"
-          >
           </Link>
         </motion.div>
       </div>

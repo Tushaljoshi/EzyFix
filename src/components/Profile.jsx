@@ -89,9 +89,9 @@ const Profile = () => {
           <div className="flex flex-col items-center space-y-4">
             <label className="relative group">
               <img
-                src={user?.avatar || "https://via.placeholder.com/150"}
-                alt="User"
-                className="w-32 h-32 rounded-full object-cover border cursor-pointer hover:opacity-80"
+                src={user}
+                alt="your Profile"
+                className="w-50 h-50rounded-full object-cover border cursor-pointer hover:opacity-80"
               />
               <input
                 type="file"
@@ -213,10 +213,6 @@ const Profile = () => {
               )}
             </div>
 
-            <p className="text-xs text-gray-500 font-semibold">
-              ID: {user?.id || "00000"} • Wallet: 🪙 {user?.wallet || "0"}
-            </p>
-
             <div className="flex gap-4 mt-4">
               {editMode ? (
                 <button
@@ -240,97 +236,6 @@ const Profile = () => {
                 Sign Out
               </button>
             </div>
-          </div>
-
-          {/* Wallet Top-up Section */}
-          <div className="bg-gray-50 p-6 rounded mt-10 border">
-            <h2 className="text-xl font-bold mb-4 text-brandBlue">Add Coins to Wallet</h2>
-
-            <label className="block font-semibold mb-2">Select Payment Method</label>
-            <select
-              value={editedUser.paymentMethod || ""}
-              onChange={(e) =>
-                setEditedUser({ ...editedUser, paymentMethod: e.target.value })
-              }
-              className="w-full p-2 border rounded mb-4"
-            >
-              <option value="">-- Choose Method --</option>
-              <option value="googlepay">Google Pay</option>
-              <option value="upi">UPI</option>
-              <option value="paypal">PayPal</option>
-            </select>
-
-            {editedUser.paymentMethod === "googlepay" && (
-              <>
-                <input
-                  type="text"
-                  placeholder="Google Pay Number"
-                  className="w-full p-2 border rounded mb-2"
-                  onChange={(e) =>
-                    setEditedUser({ ...editedUser, gpayNumber: e.target.value })
-                  }
-                />
-                <input
-                  type="text"
-                  placeholder="Linked Bank"
-                  className="w-full p-2 border rounded mb-2"
-                  onChange={(e) =>
-                    setEditedUser({ ...editedUser, gpayBank: e.target.value })
-                  }
-                />
-              </>
-            )}
-
-            {editedUser.paymentMethod === "upi" && (
-              <input
-                type="text"
-                placeholder="Enter UPI ID"
-                className="w-full p-2 border rounded mb-2"
-                onChange={(e) =>
-                  setEditedUser({ ...editedUser, upiId: e.target.value })
-                }
-              />
-            )}
-
-            {editedUser.paymentMethod === "paypal" && (
-              <input
-                type="email"
-                placeholder="PayPal Email"
-                className="w-full p-2 border rounded mb-2"
-                onChange={(e) =>
-                  setEditedUser({ ...editedUser, paypalEmail: e.target.value })
-                }
-              />
-            )}
-
-            <input
-              type="number"
-              placeholder="Amount (1 Coin = ₹1)"
-              className="w-full p-2 border rounded mb-4"
-              onChange={(e) =>
-                setEditedUser({
-                  ...editedUser,
-                  topupAmount: parseFloat(e.target.value),
-                })
-              }
-            />
-
-            <button
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full font-bold"
-              onClick={() => {
-                const amount = editedUser.topupAmount || 0;
-                if (!amount || amount <= 0) return alert("Enter a valid amount.");
-                const updatedUser = {
-                  ...user,
-                  wallet: (parseFloat(user.wallet || 0) + amount).toFixed(2),
-                };
-                setUser(updatedUser);
-                localStorage.setItem("loggedInUser", JSON.stringify(updatedUser));
-                alert(`✅ ₹${amount} added to your wallet.`);
-              }}
-            >
-              Add Coins
-            </button>
           </div>
         </div>
       </div>

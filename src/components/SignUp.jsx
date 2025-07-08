@@ -24,7 +24,7 @@ const SignUp = () => {
     localStorage.setItem("loggedInUser", JSON.stringify(newUser)); // For active session
 
     alert("Account created successfully!");
-    navigate("/profile");
+    navigate("/");
   };
 
   return (

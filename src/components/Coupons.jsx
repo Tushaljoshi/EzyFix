@@ -1,326 +1,236 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { FaStar } from "react-icons/fa";
 
 const categories = [
-  "Restaurants", "Hotels & Travel", "Online Shopping", "Health & Wellness",
-  "Activities & Events", "Spas & Experiences", "Beauty & Salon", "Education",
-  "Fitness & Sports", "Entertainment",
+  "All Deals", "Food", "Retail", "Restaurants", "Education", "Health", "Sports",
+  "Hotels & Travels", "Online Shopping"
 ];
 
-const sampleImages = [
-  "https://source.unsplash.com/400x300/?food",
-  "https://source.unsplash.com/400x300/?shopping",
-  "https://source.unsplash.com/400x300/?travel",
-  "https://source.unsplash.com/400x300/?fitness",
+const trendingCoupons = [
+  { title: "Deep Home Clean", price: 250, category: "Home" },
+  { title: "Full Car Service", price: 250, category: "Services" },
+  { title: "Pro Gaming Headset", price: 250, category: "Electronics" },
+  { title: "Smart Thermostat", price: 250, category: "Electronics" },
 ];
 
 const initialReviews = [
   { name: "Aman", rating: 5, comment: "Great value for money!" },
   { name: "Riya", rating: 4, comment: "Tasty food and quick service." },
-  { name: "Dev", rating: 5, comment: "Highly recommend this deal." },
-  { name: "Sneha", rating: 3, comment: "Good but could be better." },
-  { name: "Karan", rating: 4, comment: "Nice packaging and delivery." },
 ];
 
-const Coupons = () => {
-  const [visibleCount, setVisibleCount] = useState(4);
+const CouponsPage = () => {
+  const [selectedCategory, setSelectedCategory] = useState("All Deals");
   const [selectedCoupon, setSelectedCoupon] = useState(null);
+  const [quantity, setQuantity] = useState(1);
+  const [reviews, setReviews] = useState(initialReviews);
   const [visibleReviews, setVisibleReviews] = useState(2);
   const [newReview, setNewReview] = useState({ name: "", rating: 5, comment: "" });
-  const [reviews, setReviews] = useState(initialReviews);
-  const [filteredCategories, setFilteredCategories] = useState(categories);
-  const location = useLocation();
 
-  useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const query = searchParams.get("search")?.toLowerCase();
-    if (query) {
-      const matched = categories.filter((cat) => cat.toLowerCase().includes(query));
-      setFilteredCategories(matched.length > 0 ? matched : []);
-    } else {
-      setFilteredCategories(categories);
-    }
-  }, [location.search]);
+  const filteredCoupons = selectedCategory === "All Deals"
+    ? trendingCoupons
+    : trendingCoupons.filter(coupon => coupon.category === selectedCategory);
 
-  const handleLoadMore = () => setVisibleCount((prev) => prev + 4);
-  const handleLoadMoreReviews = () => setVisibleReviews((prev) => Math.min(prev + 2, reviews.length));
-
-  const handleReviewSubmit = () => {
-    if (newReview.name && newReview.comment) {
-      setReviews((prev) => [newReview, ...prev]);
-      setVisibleReviews((prev) => prev + 1);
-      setNewReview({ name: "", rating: 5, comment: "" });
-    }
-  };
-
-  const addToCart = (coupon) => {
-    const user = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (!user) return alert("Please sign in to add coupons to your cart.");
-    if (!coupon.available) return alert("Sorry, this coupon is no longer available.");
-
+  const handleAddToCart = () => {
     const cart = JSON.parse(localStorage.getItem("cartCoupons")) || [];
-    const newCoupon = {
-      id: Date.now(),
-      title: coupon.title,
-      discount: `🪙250 OFF`,
-      validTill: coupon.validity,
-      status: "In Cart",
-    };
-    localStorage.setItem("cartCoupons", JSON.stringify([...cart, newCoupon]));
+    cart.push({ ...selectedCoupon, quantity });
+    localStorage.setItem("cartCoupons", JSON.stringify(cart));
     alert("Coupon added to cart!");
     setSelectedCoupon(null);
   };
 
-  // ✅ Updated function to purchase and store the coupon
-  const handleBuyNow = (coupon) => {
+  const handleBuyNow = () => {
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (!user) {
-      alert("Please sign in to purchase a coupon.");
-      return;
-    }
+    if (!user) return alert("Please sign in first.");
+    const cost = quantity * selectedCoupon.price;
+    if (user.wallet < cost) return alert("Insufficient coins in wallet.");
 
-    if (!coupon.available) {
-      alert("This coupon is no longer available.");
-      return;
-    }
-
-    const quantity = coupon.quantity || 1;
-    const totalPrice = quantity * 250;
-    const currentBalance = parseFloat(user.wallet || 0);
-
-    if (currentBalance < totalPrice) {
-      alert("Insufficient wallet balance.");
-      return;
-    }
-
-    const confirmPurchase = window.confirm(`Buy ${quantity} coupon(s) for 🪙${totalPrice}?`);
-    if (!confirmPurchase) return;
-
-    // Update wallet
-    const newBalance = currentBalance - totalPrice;
-    user.wallet = newBalance;
+    user.wallet -= cost;
     localStorage.setItem("loggedInUser", JSON.stringify(user));
 
-    // Save to purchasedCoupons
     const purchased = JSON.parse(localStorage.getItem("purchasedCoupons")) || [];
-    const newCoupon = {
-      id: Date.now(),
-      title: coupon.title,
-      discount: `🪙${totalPrice} OFF`,
-      validTill: coupon.validity,
-      quantity,
-      status: "Active",
-    };
-    localStorage.setItem("purchasedCoupons", JSON.stringify([...purchased, newCoupon]));
-
-    // Save to transaction history
-    const history = JSON.parse(localStorage.getItem("transactionHistory")) || [];
-    const transaction = {
-      id: Date.now(),
-      title: coupon.title,
-      amount: totalPrice,
-      type: "Purchase",
-      date: new Date().toLocaleString(),
-    };
-    localStorage.setItem("transactionHistory", JSON.stringify([...history, transaction]));
-
-    alert("✅ Coupon purchased successfully!");
+    purchased.push({ ...selectedCoupon, quantity });
+    localStorage.setItem("purchasedCoupons", JSON.stringify(purchased));
+    alert("Purchase successful!");
     setSelectedCoupon(null);
   };
 
-  const openCouponModal = (category, index) => {
-    setSelectedCoupon({
-      title: `${category} Deal #${index + 1}`,
-      image: sampleImages[index % sampleImages.length],
-      price: "🪙250",
-      description: `Save up to 50% off on top ${category.toLowerCase()} offers.`,
-      validity: "31st Dec 2025",
-      quantity: 1,
-      available: true,
-    });
+  const handleReviewSubmit = () => {
+    if (newReview.name && newReview.comment) {
+      setReviews([newReview, ...reviews]);
+      setVisibleReviews(visibleReviews + 1);
+      setNewReview({ name: "", rating: 5, comment: "" });
+    }
+  };
+
+  const getCategorySlogan = (category) => {
+    const slogans = {
+      "Food": "Delicious Deals to Savor!",
+      "Retail": "Retail Therapy Starts Here!",
+      "Restaurants": "Dine Out with Savings!",
+      "Education": "Smart Deals for Smart Minds!",
+      "Health": "Healthy Savings for a Healthier You!",
+      "Sports": "Score Big with These Sports Deals!",
+      "Hotels & Travels": "Adventure Awaits with These Offers!",
+      "Online Shopping": "Your Cart Deserves Discounts!",
+      "Home": "Clean Up With These Savings!",
+      "Services": "Get More Done for Less!",
+      "Electronics": "Tech Deals You Can't Miss!"
+    };
+    return slogans[category] || "Unbeatable Deals Just for You!";
   };
 
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col">
       <Navbar />
-      <div className="flex-grow">
-        <div className="max-w-7xl mx-auto px-4 py-10">
-          <h1 className="text-3xl font-bold text-center mb-10 text-brandBlue">
-            Browse Coupons by Category
+      <main className="flex-grow">
+        <section className="text-center py-16 bg-brandBlue">
+          <h1 className="text-3xl font-bold text-white mb-2">
+            {selectedCategory === "All Deals" ? (
+              <>Discover <span className="text-yellow-300">Unbeatable</span> Deals</>
+            ) : (
+              <>{getCategorySlogan(selectedCategory)}</>
+            )}
           </h1>
+          {selectedCategory === "All Deals" && (
+            <p className="text-white">Find your next great coupon, from food to fashion, all in one place.</p>
+          )}
+        </section>
 
-          {filteredCategories.length > 0 ? (
-            filteredCategories.map((category, idx) => (
-              <div key={idx} className="mb-10">
-                <h2 className="text-2xl font-semibold mb-4 text-gray-800">{category}</h2>
-                <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
-                  {[...Array(visibleCount).keys()].map((i) => (
-                    <div
-                      key={i}
-                      className="bg-white rounded-lg shadow-md hover:shadow-lg transition cursor-pointer"
-                      onClick={() => openCouponModal(category, i)}
-                    >
-                      <img
-                        src={sampleImages[i % sampleImages.length]}
-                        alt="Coupon"
-                        className="w-full h-40 object-cover"
-                      />
-                      <div className="p-4">
-                        <h3 className="font-semibold text-lg text-gray-700">
-                          {category} Deal #{i + 1}
-                        </h3>
-                        <p className="text-sm text-gray-500 mt-1">
-                          Save up to 50% off on top {category.toLowerCase()} offers.
-                        </p>
-                        <p className="text-sm text-gray-500 mt-1">
-                          Expiry: 31st Dec 2025
-                        </p>
-                        <button className="mt-4 w-full bg-brandBlue text-white py-1.5 rounded hover:bg-[#2DA7ED] text-sm">
-                          Grab Coupon
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+        <section className="py-6">
+          <h2 className="text-center font-semibold text-gray-700 mb-4 text-lg">Explore Categories</h2>
+          <div className="flex flex-wrap justify-center gap-3 px-4">
+            {categories.map((cat, i) => (
+              <button
+                key={i}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-4 py-2 rounded-full border ${selectedCategory === cat ? "bg-brandBlue text-white" : "bg-white text-gray-700"}`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="py-10">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 px-4">
+            {filteredCoupons.map((coupon, idx) => (
+              <div
+                key={idx}
+                onClick={() => {
+                  setSelectedCoupon(coupon);
+                  setQuantity(1);
+                }}
+                className="bg-white shadow rounded-lg overflow-hidden cursor-pointer hover:shadow-lg"
+              >
+                <img src="https://via.placeholder.com/400x300" alt="Coupon" className="w-full h-40 object-cover" />
+                <div className="p-4">
+                  <h3 className="font-semibold text-gray-800">{coupon.title}</h3>
+                  <p className="text-sm text-gray-500">Save up to 50% off on top {coupon.category.toLowerCase()} offers.</p>
+                  <p className="text-sm text-gray-500">Expiry: 31st Dec 2025</p>
+                  <button className="mt-3 w-full bg-brandBlue text-white py-2 rounded hover:bg-[#2DA7ED]">Grab Coupon</button>
                 </div>
-                <div className="flex justify-center mt-6">
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {selectedCoupon && (
+          <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex justify-center items-center overflow-y-auto px-4 py-6">
+            <div className="bg-white rounded-lg shadow-lg w-full max-w-5xl mx-auto relative p-6 max-h-[95vh] overflow-y-auto">
+              <button onClick={() => setSelectedCoupon(null)} className="absolute top-2 right-3 text-xl text-gray-400 hover:text-gray-600">×</button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <img src="https://via.placeholder.com/400x300" alt="Coupon" className="w-full h-64 object-cover rounded mb-4" />
+                  <p className="text-sm text-gray-500">Expiry Date: <strong>31st Dec 2025</strong></p>
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-800 mb-2">{selectedCoupon.title}</h2>
+                  <p className="text-brandBlue text-xl font-bold mb-2">🪙 {selectedCoupon.price}</p>
+                  <p className="text-gray-700 mb-4 text-sm">Save up to 50% off on top {selectedCoupon.category?.toLowerCase()} offers.</p>
+
+                  <div className="mb-4">
+                    <label className="block font-medium text-sm mb-1">Quantity</label>
+                    <div className="flex items-center border rounded w-full">
+                      <button onClick={() => setQuantity(prev => Math.max(1, prev - 1))} className="px-3 py-1 text-lg">−</button>
+                      <span className="flex-1 text-center py-1">{quantity}</span>
+                      <button onClick={() => setQuantity(prev => prev + 1)} className="px-3 py-1 text-lg">+</button>
+                    </div>
+                  </div>
+
+                  <p className="text-sm text-gray-600 mb-3">Total: <strong>🪙{selectedCoupon.price * quantity}</strong></p>
                   <button
-                    onClick={handleLoadMore}
-                    className="text-brandBlue font-semibold hover:underline"
+                    onClick={handleAddToCart}
+                    className="w-full bg-brandBlue text-white py-2 rounded mb-2 hover:bg-[#2DA7ED]"
                   >
-                    Load More
+                    Add {quantity} to Cart
+                  </button>
+                  <button
+                    onClick={handleBuyNow}
+                    className="w-full border border-brandBlue text-brandBlue py-2 rounded hover:bg-blue-50"
+                  >
+                    Buy Now
                   </button>
                 </div>
               </div>
-            ))
-          ) : (
-            <p className="text-center text-gray-600">No matching categories found.</p>
-          )}
-        </div>
-      </div>
 
-      {/* Modal */}
-      {selectedCoupon && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex justify-center items-center overflow-y-auto px-4 py-6">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-5xl mx-auto relative p-6 max-h-[95vh] overflow-y-auto">
-            <button
-              onClick={() => setSelectedCoupon(null)}
-              className="absolute top-2 right-3 text-xl text-gray-400 hover:text-gray-600"
-            >
-              ×
-            </button>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <img
-                  src={selectedCoupon.image}
-                  alt="Coupon"
-                  className="w-full h-64 object-cover rounded mb-4"
-                />
-                <p className="text-sm text-gray-500">
-                  Expiry Date: <strong>{selectedCoupon.validity}</strong>
-                </p>
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-800 mb-2">{selectedCoupon.title}</h2>
-                <p className="text-brandBlue text-xl font-bold mb-2">{selectedCoupon.price}</p>
-                <p className="text-gray-700 mb-4 text-sm">{selectedCoupon.description}</p>
-                <div className="mb-4">
-                  <label className="block font-medium text-sm mb-1">Quantity</label>
+              <div className="mt-6">
+                <h3 className="text-lg font-bold mb-2">Customer Reviews</h3>
+                {reviews.slice(0, visibleReviews).map((review, index) => (
+                  <div key={index} className="border rounded p-3 mb-2">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-gray-800">{review.name}</span>
+                      <span className="text-yellow-500 flex">{[...Array(review.rating)].map((_, i) => <FaStar key={i} />)}</span>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">{review.comment}</p>
+                  </div>
+                ))}
+                {visibleReviews < reviews.length && (
+                  <button onClick={() => setVisibleReviews(visibleReviews + 2)} className="text-sm text-brandBlue hover:underline mt-2">
+                    Load More Reviews
+                  </button>
+                )}
+
+                <div className="mt-4">
+                  <h4 className="font-semibold mb-2">Add Your Review</h4>
+                  <input
+                    type="text"
+                    placeholder="Your Name"
+                    value={newReview.name}
+                    onChange={(e) => setNewReview({ ...newReview, name: e.target.value })}
+                    className="w-full mb-2 p-2 border rounded"
+                  />
+                  <textarea
+                    placeholder="Your Comment"
+                    value={newReview.comment}
+                    onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+                    className="w-full mb-2 p-2 border rounded"
+                  ></textarea>
                   <select
-                    className="border p-2 rounded w-full"
-                    value={selectedCoupon.quantity}
-                    onChange={(e) =>
-                      setSelectedCoupon({ ...selectedCoupon, quantity: parseInt(e.target.value) })
-                    }
+                    value={newReview.rating}
+                    onChange={(e) => setNewReview({ ...newReview, rating: parseInt(e.target.value) })}
+                    className="border p-2 rounded mb-2"
                   >
-                    {[...Array(10)].map((_, i) => (
-                      <option key={i + 1} value={i + 1}>
-                        {i + 1} Coupon{i + 1 > 1 ? "s" : ""}
-                      </option>
+                    {[5, 4, 3, 2, 1].map((r) => (
+                      <option key={r} value={r}>{r} Star{r > 1 ? "s" : ""}</option>
                     ))}
                   </select>
+                  <button
+                    onClick={handleReviewSubmit}
+                    className="bg-brandBlue text-white px-4 py-2 rounded hover:bg-[#2DA7ED]"
+                  >
+                    Submit Review
+                  </button>
                 </div>
-                <p className="text-sm text-gray-600 mb-3">
-                  Total: <strong>🪙{selectedCoupon.quantity * 250}</strong>
-                </p>
-                <button
-                  onClick={() => addToCart(selectedCoupon)}
-                  className="w-full bg-brandBlue text-white py-2 rounded mb-2 hover:bg-[#2DA7ED]"
-                >
-                  Add {selectedCoupon.quantity} to Cart
-                </button>
-                <button
-                  onClick={() => handleBuyNow(selectedCoupon)}
-                  className="w-full border border-brandBlue text-brandBlue py-2 rounded hover:bg-blue-50"
-                >
-                  Buy Now
-                </button>
-              </div>
-            </div>
-
-            {/* Reviews */}
-            <div className="mt-6">
-              <h3 className="text-lg font-bold mb-2">Customer Reviews</h3>
-              {reviews.slice(0, visibleReviews).map((review, index) => (
-                <div key={index} className="border rounded p-3 mb-2">
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold text-gray-800">{review.name}</span>
-                    <span className="text-yellow-500">{"★".repeat(review.rating)}</span>
-                  </div>
-                  <p className="text-sm text-gray-600 mt-1">{review.comment}</p>
-                </div>
-              ))}
-              {visibleReviews < reviews.length && (
-                <button
-                  onClick={handleLoadMoreReviews}
-                  className="text-sm text-brandBlue hover:underline mt-2"
-                >
-                  Load More Reviews
-                </button>
-              )}
-
-              {/* Add Review */}
-              <div className="mt-4">
-                <h4 className="font-semibold mb-2">Add Your Review</h4>
-                <input
-                  type="text"
-                  placeholder="Your Name"
-                  value={newReview.name}
-                  onChange={(e) => setNewReview({ ...newReview, name: e.target.value })}
-                  className="w-full mb-2 p-2 border rounded"
-                />
-                <textarea
-                  placeholder="Your Comment"
-                  value={newReview.comment}
-                  onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
-                  className="w-full mb-2 p-2 border rounded"
-                ></textarea>
-                <select
-                  value={newReview.rating}
-                  onChange={(e) => setNewReview({ ...newReview, rating: parseInt(e.target.value) })}
-                  className="border p-2 rounded mb-2"
-                >
-                  {[5, 4, 3, 2, 1].map((r) => (
-                    <option key={r} value={r}>
-                      {r} Star{r > 1 ? "s" : ""}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  onClick={handleReviewSubmit}
-                  className="bg-brandBlue text-white px-4 py-2 rounded hover:bg-[#2DA7ED]"
-                >
-                  Submit Review
-                </button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </main>
       <Footer />
     </div>
   );
 };
 
-export default Coupons;
+export default CouponsPage;

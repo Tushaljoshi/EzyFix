@@ -1,105 +1,86 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { ShoppingCart, Wallet } from "lucide-react";
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [showWallet, setShowWallet] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    const stored = localStorage.getItem("loggedInUser");
-    if (stored) {
-      setUser(JSON.parse(stored));
-    }
-  }, []);
+    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+    setUser(loggedInUser);
+  }, [location.pathname]);
 
-  const handleSearch = (e) => {
-    if (e.key === "Enter" && searchQuery.trim()) {
-      navigate(`/coupons?search=${encodeURIComponent(searchQuery.trim())}`);
-      setIsMobileMenuOpen(false);
+  const handleLogout = () => {
+    localStorage.removeItem("loggedInUser");
+    setUser(null);
+    navigate("/signin");
+  };
+
+  const handleWalletToggle = () => {
+    if (!user) {
+      alert("Please sign in to view your wallet.");
+      return;
     }
+    setShowWallet(!showWallet);
+  };
+
+  const handleCartClick = () => {
+    if (!user) {
+      alert("Please sign in to view your cart.");
+      return;
+    }
+    navigate("/my-coupons");
   };
 
   return (
-    <nav className="bg-white shadow-sm px-4 py-3 md:px-6">
-      <div className="flex justify-between items-center">
-        <div className="text-2xl font-bold text-brandBlue">EzyFix</div>
+    <nav className="bg-white shadow-sm sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+        <Link to="/" className="text-xl font-bold text-brandBlue">EzyFix</Link>
 
-        <div className="hidden md:flex space-x-6 text-sm text-gray-700 font-medium">
+        {/* Navigation Links */}
+        <div className="flex gap-6 text-sm font-medium items-center">
           <Link to="/" className="hover:text-brandBlue">Home</Link>
           <Link to="/coupons" className="hover:text-brandBlue">Coupons</Link>
           <Link to="/my-coupons" className="hover:text-brandBlue">My Coupons</Link>
           <Link to="/query" className="hover:text-brandBlue">Query</Link>
-          <Link to="/profile" className="hover:text-brandBlue">My Profile</Link>
+          <Link to="/profile" className="hover:text-brandBlue">Profile</Link>
         </div>
 
-        <div className="hidden md:flex items-center space-x-3">
-          {!user ? (
-            <>
-              <Link to="/signin" className="text-sm text-gray-600 hover:text-brandBlue">Sign In</Link>
-              <Link to="/signup" className="bg-brandBlue text-white text-sm px-4 py-2 rounded hover:bg-[#2DA7ED]">Sign Up</Link>
-            </>
+        {/* Icons and Auth */}
+        <div className="flex gap-4 items-center">
+          <button onClick={handleWalletToggle} className="text-gray-600 hover:text-brandBlue">
+            <Wallet />
+          </button>
+          <button onClick={handleCartClick} className="text-gray-600 hover:text-brandBlue">
+            <ShoppingCart />
+          </button>
+
+          {user ? (
+            <div className="flex items-center gap-2">
+              <span className="text-gray-700 text-sm">Hi, {user.name}</span>
+            </div>
           ) : (
-            <Link to="/profile">
-              <img
-                src={user.avatar || "https://via.placeholder.com/32"}
-                alt="User"
-                className="w-8 h-8 rounded-full object-cover border"
-              />
+            <Link to="/signin" className="bg-brandBlue text-white px-4 py-1.5 rounded text-sm hover:bg-[#2DA7ED]">
+              Sign In / Sign Up
             </Link>
           )}
-
-          <input
-            type="text"
-            placeholder="Search deals..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={handleSearch}
-            className="px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brandBlue text-sm w-44"
-          />
         </div>
-
-        <button className="md:hidden" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-          {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
       </div>
 
-      {isMobileMenuOpen && (
-        <div className="mt-4 md:hidden space-y-4 text-sm text-gray-700">
-          <Link to="/" className="block hover:text-brandBlue">Homepage</Link>
-          <Link to="/coupons" className="hover:text-brandBlue">Coupons</Link>
-          <Link to="/my-coupons" className="block hover:text-brandBlue">My Coupons</Link>
-          <Link to="/query" className="block hover:text-brandBlue">Query Page</Link>
-          <Link to="/profile" className="block hover:text-brandBlue">Profile Page</Link>
-
-          {!user ? (
-            <>
-              <Link to="/signin" className="block hover:text-brandBlue">Sign In</Link>
-              <Link to="/signup" className="block text-white bg-brandBlue px-4 py-2 rounded hover:bg-[#2DA7ED]">Sign Up</Link>
-            </>
-          ) : (
-            <Link to="/profile" className="block">
-              <div className="flex items-center space-x-2">
-                <img
-                  src={user.avatar || "https://via.placeholder.com/32"}
-                  alt="User"
-                  className="w-8 h-8 rounded-full border object-cover"
-                />
-                <span className="text-sm">{user.name || "Your Profile"}</span>
-              </div>
-            </Link>
-          )}
-
-          <input
-            type="text"
-            placeholder="Search deals..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={handleSearch}
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-brandBlue text-sm"
-          />
+      {/* Wallet Section */}
+      {showWallet && user && (
+        <div className="bg-gray-100 py-4 border-t text-center">
+          <h3 className="text-lg font-semibold text-gray-700 mb-1">🪙 Wallet Balance</h3>
+          <p className="text-brandBlue font-bold text-xl mb-2">{user.wallet || 0} coins</p>
+          <button
+            onClick={() => navigate("/add-coins")}
+            className="bg-brandBlue text-white px-4 py-2 rounded hover:bg-[#2DA7ED]"
+          >
+            Add Coins
+          </button>
         </div>
       )}
     </nav>

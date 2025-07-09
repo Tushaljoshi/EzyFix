@@ -70,7 +70,7 @@ const Navbar = () => {
             </button>
 
             {user ? (
-              <span className="text-sm text-gray-700 hidden sm:inline">Hi, {user.name}</span>
+              <span className="text-sm text-blod-gray-700 hidden sm:inline">Hi, {user.name}</span>
             ) : (
               <button
                 onClick={() => setShowAuthPopup(true)}
@@ -120,7 +120,7 @@ const Navbar = () => {
               <button
                 onClick={() => {
                   setShowAuthPopup(false);
-                  navigate("/signin");
+                  navigate("/signup");
                 }}
                 className="bg-brandBlue text-white px-6 py-2 rounded hover:bg-[#2DA7ED]"
               >

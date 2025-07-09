@@ -9,6 +9,9 @@ const SignIn = () => {
   const [enteredOTP, setEnteredOTP] = useState("");
   const [generatedOTP, setGeneratedOTP] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [otpLoginMode, setOtpLoginMode] = useState(false);
+  const [phone, setPhone] = useState("");
+
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
@@ -33,34 +36,53 @@ const SignIn = () => {
     e.preventDefault();
     const storedUser = JSON.parse(localStorage.getItem("user"));
 
-    if (!storedUser || storedUser.email !== email) {
-      alert("Email not found.");
-      return;
+    if (otpLoginMode) {
+      // Sign In via Phone OTP
+      if (!storedUser || storedUser.phone !== phone) {
+        alert("Phone number not found.");
+        return;
+      }
+    } else {
+      // Forgot password via Email OTP
+      if (!storedUser || storedUser.email !== email) {
+        alert("Email not found.");
+        return;
+      }
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     setGeneratedOTP(otp);
     setOtpSent(true);
 
-    // In real app, send OTP via email service
-    alert(`Your OTP is: ${otp}`);
+    alert(`📲 Your OTP is: ${otp}`);
   };
 
   const handleVerifyOTP = (e) => {
     e.preventDefault();
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+
     if (enteredOTP !== generatedOTP) {
       alert("Incorrect OTP");
       return;
     }
 
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    storedUser.password = newPassword;
-    localStorage.setItem("user", JSON.stringify(storedUser));
+    if (otpLoginMode) {
+      // Successful OTP Login
+      localStorage.setItem("loggedInUser", JSON.stringify(storedUser));
+      alert("Login successful!");
+      navigate("/profile");
+    } else {
+      // Reset Password Flow
+      storedUser.password = newPassword;
+      localStorage.setItem("user", JSON.stringify(storedUser));
+      alert("Password reset successful!");
+    }
 
-    alert("Password reset successful!");
     setResetMode(false);
+    setOtpLoginMode(false);
     setOtpSent(false);
     setEmail("");
+    setPhone("");
     setNewPassword("");
     setEnteredOTP("");
   };
@@ -69,11 +91,15 @@ const SignIn = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <h2 className="text-2xl font-bold text-center text-brandBlue mb-6">
-          {resetMode ? "Reset Password" : "Sign In to EzyFix"}
+          {resetMode
+            ? "Reset Password"
+            : otpLoginMode
+            ? "Sign In with OTP"
+            : "Sign In to EzyFix"}
         </h2>
 
-        {!resetMode ? (
-          // --------- LOGIN FORM ---------
+        {/* ------- Email/Password Login ------- */}
+        {!resetMode && !otpLoginMode && (
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
               <label className="block text-sm font-medium text-gray-700">Email</label>
@@ -102,15 +128,21 @@ const SignIn = () => {
               Sign In
             </button>
           </form>
-        ) : !otpSent ? (
-          // --------- SEND OTP FORM ---------
+        )}
+
+        {/* ------- Send OTP (for Forgot Password or OTP Login) ------- */}
+        {((resetMode || otpLoginMode) && !otpSent) && (
           <form className="space-y-4" onSubmit={handleSendOTP}>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Enter your email</label>
+              <label className="block text-sm font-medium text-gray-700">
+                {otpLoginMode ? "Phone Number" : "Enter your Email"}
+              </label>
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type={otpLoginMode ? "tel" : "email"}
+                value={otpLoginMode ? phone : email}
+                onChange={(e) =>
+                  otpLoginMode ? setPhone(e.target.value) : setEmail(e.target.value)
+                }
                 className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brandBlue"
                 required
               />
@@ -122,8 +154,10 @@ const SignIn = () => {
               Send OTP
             </button>
           </form>
-        ) : (
-          // --------- VERIFY OTP FORM ---------
+        )}
+
+        {/* ------- Verify OTP & Password Reset or Login ------- */}
+        {otpSent && (
           <form className="space-y-4" onSubmit={handleVerifyOTP}>
             <div>
               <label className="block text-sm font-medium text-gray-700">Enter OTP</label>
@@ -135,43 +169,57 @@ const SignIn = () => {
                 required
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">New Password</label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brandBlue"
-                required
-              />
-            </div>
+            {!otpLoginMode && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">New Password</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brandBlue"
+                  required
+                />
+              </div>
+            )}
             <button
               type="submit"
               className="w-full bg-brandBlue text-white py-2 rounded-md hover:bg-[#2DA7ED] transition"
             >
-              Reset Password
+              {otpLoginMode ? "Login" : "Reset Password"}
             </button>
           </form>
         )}
 
-        <div className="flex justify-between mt-4 text-sm">
+        {/* ------- Footer Options ------- */}
+        <div className="flex flex-col mt-6 gap-2 text-sm">
           <p className="text-gray-500">
-            Don't have an account?{" "}
+            Don’t have an account?{" "}
             <Link to="/signup" className="text-brandBlue hover:underline">
               Sign Up
             </Link>
           </p>
-          <button
-            onClick={() => {
-              setResetMode(!resetMode);
-              setOtpSent(false);
-              setEnteredOTP("");
-              setNewPassword("");
-            }}
-            className="text-brandBlue hover:underline"
-          >
-            {resetMode ? "Back to Login" : "Forgot Password?"}
-          </button>
+          <div className="flex justify-between">
+            <button
+              onClick={() => {
+                setResetMode(!resetMode);
+                setOtpLoginMode(false);
+                setOtpSent(false);
+              }}
+              className="text-brandBlue hover:underline"
+            >
+              {resetMode ? "Back to Login" : "Forgot Password?"}
+            </button>
+            <button
+              onClick={() => {
+                setOtpLoginMode(!otpLoginMode);
+                setResetMode(false);
+                setOtpSent(false);
+              }}
+              className="text-brandBlue hover:underline"
+            >
+              {otpLoginMode ? "Login with Email" : "Login with OTP"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -8,10 +8,6 @@ const ProfilePage = () => {
   const [user, setUser] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
-  const [otpInput, setOtpInput] = useState("");
-  const [generatedOtp, setGeneratedOtp] = useState("");
-  const [verifyStep, setVerifyStep] = useState(false);
-  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
   const [userRating, setUserRating] = useState(0);
 
   useEffect(() => {
@@ -19,7 +15,6 @@ const ProfilePage = () => {
     if (loggedInUser) {
       setUser(loggedInUser);
       setImagePreview(loggedInUser.profileImage || null);
-      setIsPhoneVerified(loggedInUser.isPhoneVerified || false);
     }
   }, []);
 
@@ -43,27 +38,9 @@ const ProfilePage = () => {
     reader.readAsDataURL(file);
   };
 
-  const generateOtp = () => {
-    const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    setGeneratedOtp(newOtp);
-    alert(`📩 Your OTP is: ${newOtp}`);
-    setVerifyStep(true);
-  };
-
-  const verifyOtp = () => {
-    if (otpInput === generatedOtp) {
-      alert("✅ Mobile number verified successfully");
-      setVerifyStep(false);
-      setIsPhoneVerified(true);
-    } else {
-      alert("❌ Invalid OTP. Please try again.");
-    }
-  };
-
   const handleSave = () => {
     if (!user) return alert("You must be signed in to save changes.");
-    if (!isPhoneVerified) return alert("❌ Please verify your mobile number before saving.");
-    localStorage.setItem("loggedInUser", JSON.stringify({ ...user, isPhoneVerified }));
+    localStorage.setItem("loggedInUser", JSON.stringify(user));
     setEditMode(false);
     alert("✅ Profile updated successfully.");
   };
@@ -125,39 +102,13 @@ const ProfilePage = () => {
             <div>
               <label className="font-medium">Mobile:</label>
               {editMode ? (
-                verifyStep ? (
-                  <div className="flex gap-2 mt-2">
-                    <input
-                      type="text"
-                      placeholder="Enter OTP"
-                      className="border px-2 py-1 rounded w-full"
-                      value={otpInput}
-                      onChange={(e) => setOtpInput(e.target.value)}
-                    />
-                    <button
-                      onClick={verifyOtp}
-                      className="bg-brandBlue text-white px-3 py-1 rounded text-sm"
-                    >
-                      Verify
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={user.phone || ""}
-                      onChange={handleInputChange}
-                      className="border px-2 py-1 rounded w-full"
-                    />
-                    <button
-                      onClick={generateOtp}
-                      className="text-xs text-brandBlue"
-                    >
-                      Get OTP
-                    </button>
-                  </div>
-                )
+                <input
+                  type="tel"
+                  name="phone"
+                  value={user.phone || ""}
+                  onChange={handleInputChange}
+                  className="border px-2 py-1 rounded w-full"
+                />
               ) : (
                 <p>{user?.phone || "Not added"}</p>
               )}
@@ -233,13 +184,6 @@ const ProfilePage = () => {
             <span className="font-medium">My Coupons</span>
             <ArrowRight />
           </button>
-          <button
-            onClick={handleLogout}
-            className="flex justify-between items-center bg-white p-4 rounded shadow text-red-500"
-          >
-            <span className="font-medium">Logout</span>
-            <LogOut />
-          </button>
         </div>
 
         {/* Terms */}
@@ -263,7 +207,7 @@ const ProfilePage = () => {
         </div>
 
         {/* User Rating */}
-        <div className="bg-white p-4 rounded shadow flex flex-col gap-2 items-start">
+        <div className="bg-white p-4 rounded shadow flex flex-col gap-2 items-start mb-6">
           <span className="font-medium">Rate us</span>
           <div className="flex gap-1 text-yellow-400">
             {[...Array(5)].map((_, i) => (
@@ -277,6 +221,15 @@ const ProfilePage = () => {
             ))}
           </div>
         </div>
+
+        {/* Logout Button at Bottom */}
+        <button
+          onClick={handleLogout}
+          className="flex justify-between items-center bg-red w-55 p-4 rounded shadow text-white-500"
+        >
+          <span className="font-medium">Logout</span>
+          <LogOut />
+        </button>
       </div>
     </div>
   );

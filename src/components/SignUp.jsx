@@ -99,26 +99,6 @@ const SignUp = () => {
               required
             />
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Username</label>
-            <div className="flex">
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-2 border rounded-l-md"
-              />
-              <button
-                type="button"
-                onClick={() => setUsername(generateUsername(firstName, lastName))}
-                className="bg-brandBlue text-white px-3 rounded-r-md text-sm"
-              >
-                Regenerate
-              </button>
-            </div>
-          </div>
-
           <input
             type="email"
             placeholder="Email"

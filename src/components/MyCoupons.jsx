@@ -126,7 +126,7 @@ const MyCoupons = () => {
               <p className="text-sm text-gray-600">Redeemed This Month</p>
             </div>
             <div>
-              <p className="text-xl font-bold text-brandBlue">3</p>
+              <p className="text-xl font-bold text-brandBlue"></p>
               <p className="text-sm text-gray-600">Expiring Soon</p>
             </div>
           </div>

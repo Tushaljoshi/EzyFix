@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { ShoppingCart, Wallet, X } from "lucide-react";
+import { Menu, X, ShoppingCart, Wallet } from "lucide-react";
+
 const Navbar = () => {
   const [user, setUser] = useState(null);
   const [showAuthPopup, setShowAuthPopup] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -17,20 +19,16 @@ const Navbar = () => {
       setShowAuthPopup(true);
     } else {
       navigate(path);
+      setIsMobileMenuOpen(false);
     }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("loggedInUser");
-    setUser(null);
-    navigate("/signin");
   };
 
   const handleWalletClick = () => {
     if (!user) {
       setShowAuthPopup(true);
     } else {
-      navigate("/Wallet");
+      navigate("/wallet");
+      setIsMobileMenuOpen(false);
     }
   };
 
@@ -39,6 +37,7 @@ const Navbar = () => {
       setShowAuthPopup(true);
     } else {
       navigate("/my-coupons");
+      setIsMobileMenuOpen(false);
     }
   };
 
@@ -48,7 +47,8 @@ const Navbar = () => {
         <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
           <Link to="/" className="text-xl font-bold text-brandBlue">EzyFix</Link>
 
-          <div className="flex gap-6 text-sm font-medium items-center">
+          {/* Desktop Links */}
+          <div className="hidden md:flex gap-6 text-sm font-medium items-center">
             <Link to="/" className="hover:text-brandBlue">Home</Link>
             <Link to="/coupons" className="hover:text-brandBlue">Coupons</Link>
             <button onClick={() => handleProtectedClick("/my-coupons")} className="hover:text-brandBlue">My Coupons</button>
@@ -56,18 +56,21 @@ const Navbar = () => {
             <button onClick={() => handleProtectedClick("/profile")} className="hover:text-brandBlue">Profile</button>
           </div>
 
-          <div className="flex gap-4 items-center">
-            <button onClick={handleWalletClick} className="text-gray-600 hover:text-brandBlue">
-              <Wallet />
+          {/* Action Buttons */}
+          <div className="flex items-center gap-3">
+            <button onClick={handleWalletClick} className="text-gray-600 hover:text-brandBlue flex items-center gap-1">
+              <Wallet className="w-5 h-5" />
+              {user && (
+                <span className="text-sm text-brandBlue font-medium">🪙{parseFloat(user.wallet || 0).toFixed(0)}</span>
+              )}
             </button>
+
             <button onClick={handleCartClick} className="text-gray-600 hover:text-brandBlue">
-              <ShoppingCart />
+              <ShoppingCart className="w-5 h-5" />
             </button>
 
             {user ? (
-              <div className="flex items-center gap-2">
-                <span className="text-gray-700 text-sm">Hi, {user.name}</span>
-              </div>
+              <span className="text-sm text-gray-700 hidden sm:inline">Hi, {user.name}</span>
             ) : (
               <button
                 onClick={() => setShowAuthPopup(true)}
@@ -76,8 +79,27 @@ const Navbar = () => {
                 Sign In / Sign Up
               </button>
             )}
+
+            {/* Hamburger Button for Mobile */}
+            <button
+              className="md:hidden text-gray-600 hover:text-brandBlue"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden bg-white border-t px-4 py-3 space-y-3">
+            <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="block hover:text-brandBlue">Home</Link>
+            <Link to="/coupons" onClick={() => setIsMobileMenuOpen(false)} className="block hover:text-brandBlue">Coupons</Link>
+            <button onClick={() => handleProtectedClick("/my-coupons")} className="block w-full text-left hover:text-brandBlue">My Coupons</button>
+            <button onClick={() => handleProtectedClick("/query")} className="block w-full text-left hover:text-brandBlue">Query</button>
+            <button onClick={() => handleProtectedClick("/profile")} className="block w-full text-left hover:text-brandBlue">Profile</button>
+          </div>
+        )}
       </nav>
 
       {/* Sign In / Sign Up Popup */}

@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { ShoppingCart, Wallet } from "lucide-react";
-
+import { ShoppingCart, Wallet, X } from "lucide-react";
 const Navbar = () => {
   const [user, setUser] = useState(null);
-  const [showWallet, setShowWallet] = useState(false);
+  const [showAuthPopup, setShowAuthPopup] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -13,77 +12,103 @@ const Navbar = () => {
     setUser(loggedInUser);
   }, [location.pathname]);
 
+  const handleProtectedClick = (path) => {
+    if (!user) {
+      setShowAuthPopup(true);
+    } else {
+      navigate(path);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("loggedInUser");
     setUser(null);
     navigate("/signin");
   };
 
-  const handleWalletToggle = () => {
+  const handleWalletClick = () => {
     if (!user) {
-      alert("Please sign in to view your wallet.");
-      return;
+      setShowAuthPopup(true);
+    } else {
+      navigate("/Wallet");
     }
-    setShowWallet(!showWallet);
   };
 
   const handleCartClick = () => {
     if (!user) {
-      alert("Please sign in to view your cart.");
-      return;
+      setShowAuthPopup(true);
+    } else {
+      navigate("/my-coupons");
     }
-    navigate("/my-coupons");
   };
 
   return (
-    <nav className="bg-white shadow-sm sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-        <Link to="/" className="text-xl font-bold text-brandBlue">EzyFix</Link>
+    <>
+      <nav className="bg-white shadow-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+          <Link to="/" className="text-xl font-bold text-brandBlue">EzyFix</Link>
 
-        {/* Navigation Links */}
-        <div className="flex gap-6 text-sm font-medium items-center">
-          <Link to="/" className="hover:text-brandBlue">Home</Link>
-          <Link to="/coupons" className="hover:text-brandBlue">Coupons</Link>
-          <Link to="/my-coupons" className="hover:text-brandBlue">My Coupons</Link>
-          <Link to="/query" className="hover:text-brandBlue">Query</Link>
-          <Link to="/profile" className="hover:text-brandBlue">Profile</Link>
+          <div className="flex gap-6 text-sm font-medium items-center">
+            <Link to="/" className="hover:text-brandBlue">Home</Link>
+            <Link to="/coupons" className="hover:text-brandBlue">Coupons</Link>
+            <button onClick={() => handleProtectedClick("/my-coupons")} className="hover:text-brandBlue">My Coupons</button>
+            <button onClick={() => handleProtectedClick("/query")} className="hover:text-brandBlue">Query</button>
+            <button onClick={() => handleProtectedClick("/profile")} className="hover:text-brandBlue">Profile</button>
+          </div>
+
+          <div className="flex gap-4 items-center">
+            <button onClick={handleWalletClick} className="text-gray-600 hover:text-brandBlue">
+              <Wallet />
+            </button>
+            <button onClick={handleCartClick} className="text-gray-600 hover:text-brandBlue">
+              <ShoppingCart />
+            </button>
+
+            {user ? (
+              <div className="flex items-center gap-2">
+                <span className="text-gray-700 text-sm">Hi, {user.name}</span>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAuthPopup(true)}
+                className="bg-brandBlue text-white px-4 py-1.5 rounded text-sm hover:bg-[#2DA7ED]"
+              >
+                Sign In / Sign Up
+              </button>
+            )}
+          </div>
         </div>
+      </nav>
 
-        {/* Icons and Auth */}
-        <div className="flex gap-4 items-center">
-          <button onClick={handleWalletToggle} className="text-gray-600 hover:text-brandBlue">
-            <Wallet />
-          </button>
-          <button onClick={handleCartClick} className="text-gray-600 hover:text-brandBlue">
-            <ShoppingCart />
-          </button>
-
-          {user ? (
-            <div className="flex items-center gap-2">
-              <span className="text-gray-700 text-sm">Hi, {user.name}</span>
+      {/* Sign In / Sign Up Popup */}
+      {showAuthPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center px-4">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full relative">
+            <button
+              onClick={() => setShowAuthPopup(false)}
+              className="absolute top-2 right-3 text-gray-400 hover:text-gray-700 text-xl"
+            >
+              <X />
+            </button>
+            <h2 className="text-lg font-bold text-center mb-3">Sign In Required</h2>
+            <p className="text-sm text-center text-gray-600 mb-4">
+              Please sign in to access this feature.
+            </p>
+            <div className="flex justify-center">
+              <button
+                onClick={() => {
+                  setShowAuthPopup(false);
+                  navigate("/signin");
+                }}
+                className="bg-brandBlue text-white px-6 py-2 rounded hover:bg-[#2DA7ED]"
+              >
+                Sign In / Sign Up
+              </button>
             </div>
-          ) : (
-            <Link to="/signin" className="bg-brandBlue text-white px-4 py-1.5 rounded text-sm hover:bg-[#2DA7ED]">
-              Sign In / Sign Up
-            </Link>
-          )}
-        </div>
-      </div>
-
-      {/* Wallet Section */}
-      {showWallet && user && (
-        <div className="bg-gray-100 py-4 border-t text-center">
-          <h3 className="text-lg font-semibold text-gray-700 mb-1">🪙 Wallet Balance</h3>
-          <p className="text-brandBlue font-bold text-xl mb-2">{user.wallet || 0} coins</p>
-          <button
-            onClick={() => navigate("/add-coins")}
-            className="bg-brandBlue text-white px-4 py-2 rounded hover:bg-[#2DA7ED]"
-          >
-            Add Coins
-          </button>
+          </div>
         </div>
       )}
-    </nav>
+    </>
   );
 };
 

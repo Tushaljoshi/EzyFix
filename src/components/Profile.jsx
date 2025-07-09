@@ -1,241 +1,280 @@
 import React, { useEffect, useState } from "react";
-import Navbar from "./Navbar";
+import { useNavigate } from "react-router-dom";
+import { ArrowRight, LogOut, Edit3, Star } from "lucide-react";
+import Navbar from "../components/Navbar";
 
-const Profile = () => {
+const ProfilePage = () => {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [editMode, setEditMode] = useState(false);
-  const [editedUser, setEditedUser] = useState({});
-  const [verifyEmail, setVerifyEmail] = useState("");
-  const [verifyPassword, setVerifyPassword] = useState("");
-  const [otp, setOtp] = useState("");
-  const [generatedOtp, setGeneratedOtp] = useState(null);
-  const [otpVerified, setOtpVerified] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [otpInput, setOtpInput] = useState("");
+  const [generatedOtp, setGeneratedOtp] = useState("");
+  const [verifyStep, setVerifyStep] = useState(false);
+  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
+  const [userRating, setUserRating] = useState(0);
 
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (storedUser) {
-      setUser(storedUser);
-      setEditedUser(storedUser);
+    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (loggedInUser) {
+      setUser(loggedInUser);
+      setImagePreview(loggedInUser.profileImage || null);
+      setIsPhoneVerified(loggedInUser.isPhoneVerified || false);
     }
   }, []);
 
-  const generateOTP = () => {
-    const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    setGeneratedOtp(newOtp);
-    alert("OTP sent to your email: " + newOtp);
+  const handleLogout = () => {
+    localStorage.removeItem("loggedInUser");
+    navigate("/");
   };
 
-  const verifyOTP = () => {
-    if (otp === generatedOtp) {
-      setOtpVerified(true);
-      alert("OTP verified successfully.");
-    } else {
-      alert("Invalid OTP. Please try again.");
-    }
+  const handleInputChange = (e) => {
+    setUser({ ...user, [e.target.name]: e.target.value });
   };
 
-  const handleImageChange = (e) => {
+  const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onloadend = () => {
-      const updatedUser = { ...user, avatar: reader.result };
-      setUser(updatedUser);
-      setEditedUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      localStorage.setItem("loggedInUser", JSON.stringify(updatedUser));
+      setImagePreview(reader.result);
+      setUser({ ...user, profileImage: reader.result });
     };
     reader.readAsDataURL(file);
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditedUser((prev) => ({ ...prev, [name]: value }));
+  const generateOtp = () => {
+    const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedOtp(newOtp);
+    alert(`📩 Your OTP is: ${newOtp}`);
+    setVerifyStep(true);
   };
 
-  const handleSaveProfile = () => {
-    if (
-      editedUser.password !== user.password &&
-      (verifyEmail !== user.email || verifyPassword !== user.password || !otpVerified)
-    ) {
-      alert("Verification failed. Please enter correct email, password, and OTP.");
-      return;
+  const verifyOtp = () => {
+    if (otpInput === generatedOtp) {
+      alert("✅ Mobile number verified successfully");
+      setVerifyStep(false);
+      setIsPhoneVerified(true);
+    } else {
+      alert("❌ Invalid OTP. Please try again.");
     }
-
-    const { password, ...safeUser } = editedUser;
-    setUser(safeUser);
-    localStorage.setItem("user", JSON.stringify(editedUser));
-    localStorage.setItem("loggedInUser", JSON.stringify(editedUser));
-    setEditMode(false);
-    setOtpVerified(false);
-    alert("Profile updated!");
   };
 
-  const handleSignOut = () => {
-    localStorage.clear();
-    alert("Signed out. All user data and coupon history cleared.");
-    window.location.reload();
+  const handleSave = () => {
+    if (!user) return alert("You must be signed in to save changes.");
+    if (!isPhoneVerified) return alert("❌ Please verify your mobile number before saving.");
+    localStorage.setItem("loggedInUser", JSON.stringify({ ...user, isPhoneVerified }));
+    setEditMode(false);
+    alert("✅ Profile updated successfully.");
   };
 
   return (
-    <div className="bg-[#f9fbfd] min-h-screen">
+    <div className="bg-gray-50 min-h-screen">
       <Navbar />
-
-      <div className="max-w-4xl mx-auto px-4 py-10">
-        <h1 className="text-3xl font-bold mb-6 text-center text-brandBlue">Account Settings</h1>
-
-        <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
-          <div className="flex flex-col items-center space-y-4">
-            <label className="relative group">
-              <img
-                src={user}
-                alt="your Profile"
-                className="w-50 h-50rounded-full object-cover border cursor-pointer hover:opacity-80"
-              />
+      <div className="max-w-6xl mx-auto py-10 px-4 text-sm text-gray-800">
+        {/* Profile Header */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="relative w-20 h-20">
+            <img
+              src={imagePreview || "https://cdn-icons-png.flaticon.com/512/847/847969.png"}
+              alt="Profile"
+              className="w-full h-full rounded-full object-cover border"
+            />
+            {user && (
               <input
                 type="file"
                 accept="image/*"
-                onChange={handleImageChange}
                 className="absolute inset-0 opacity-0 cursor-pointer"
+                onChange={handleImageUpload}
               />
-              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition text-sm text-white rounded-full font-bold">
-                Change
-              </div>
-            </label>
+            )}
+          </div>
+          <div>
+            <h2 className="font-bold text-lg">{user?.name || "Your Name"}</h2>
+            <p className="text-gray-500">{user?.email || "youremail@example.com"}</p>
+          </div>
+        </div>
 
-            <div className="w-full font-bold">
-              {editMode ? (
-                <>
-                  <input
-                    type="text"
-                    name="name"
-                    value={editedUser.name || ""}
-                    onChange={handleInputChange}
-                    className="w-full border px-3 py-2 rounded mb-2"
-                    placeholder="Full Name"
-                  />
-                  <input
-                    type="email"
-                    name="email"
-                    value={editedUser.email || ""}
-                    onChange={handleInputChange}
-                    className="w-full border px-3 py-2 rounded mb-2"
-                    placeholder="Email Address"
-                  />
-                  <input
-                    type="text"
-                    name="phone"
-                    value={editedUser.phone || ""}
-                    onChange={handleInputChange}
-                    className="w-full border px-3 py-2 rounded mb-2"
-                    placeholder="Mobile Number"
-                  />
-                  <input
-                    type="text"
-                    name="address"
-                    value={editedUser.address || ""}
-                    onChange={handleInputChange}
-                    className="w-full border px-3 py-2 rounded mb-2"
-                    placeholder="Address"
-                  />
-                  <input
-                    type="date"
-                    name="dob"
-                    value={editedUser.dob || ""}
-                    onChange={handleInputChange}
-                    className="w-full border px-3 py-2 rounded mb-2"
-                  />
-                  <input
-                    type="text"
-                    name="gender"
-                    value={editedUser.gender || ""}
-                    onChange={handleInputChange}
-                    className="w-full border px-3 py-2 rounded mb-2"
-                    placeholder="Gender"
-                  />
-
-                  <div className="border-t pt-4">
-                    <input
-                      type="email"
-                      value={verifyEmail}
-                      onChange={(e) => setVerifyEmail(e.target.value)}
-                      className="w-full border px-3 py-2 rounded mb-2"
-                      placeholder="Enter your current email to verify"
-                    />
-                    <input
-                      type="password"
-                      value={verifyPassword}
-                      onChange={(e) => setVerifyPassword(e.target.value)}
-                      className="w-full border px-3 py-2 rounded mb-2"
-                      placeholder="Enter current password to verify"
-                    />
-                    <div className="flex items-center gap-2 mb-2">
-                      <input
-                        type="text"
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
-                        className="w-full border px-3 py-2 rounded"
-                        placeholder="Enter OTP"
-                      />
-                      <button
-                        onClick={generateOTP}
-                        className="bg-blue-500 text-white px-3 py-1 rounded font-bold hover:bg-blue-600"
-                      >
-                        Send OTP
-                      </button>
-                      <button
-                        onClick={verifyOTP}
-                        className="bg-green-600 text-white px-3 py-1 rounded font-bold hover:bg-green-700"
-                      >
-                        Verify OTP
-                      </button>
-                    </div>
-                    <input
-                      type="password"
-                      name="password"
-                      value={editedUser.password || ""}
-                      onChange={handleInputChange}
-                      className="w-full border px-3 py-2 rounded"
-                      placeholder="New Password"
-                    />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <h2 className="text-xl font-bold text-center">{user?.name || "Guest User"}</h2>
-                  <p className="text-sm text-center">{user?.email || "user@example.com"}</p>
-                  <p className="text-sm text-center">{user?.phone || "No mobile number"}</p>
-                  {user?.address && <p className="text-sm text-center">{user.address}</p>}
-                  {user?.dob && <p className="text-sm text-center">DOB: {user.dob}</p>}
-                  {user?.gender && <p className="text-sm text-center">Gender: {user.gender}</p>}
-                </>
-              )}
-            </div>
-
-            <div className="flex gap-4 mt-4">
-              {editMode ? (
+        {/* General Info */}
+        <div className="bg-white p-5 rounded shadow mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-semibold text-brandBlue text-md">General Information</h3>
+            {user ? (
+              !editMode ? (
                 <button
-                  onClick={handleSaveProfile}
-                  className="bg-green-600 text-white px-6 py-2 rounded font-bold hover:bg-green-700"
+                  onClick={() => setEditMode(true)}
+                  className="text-xs text-brandBlue flex items-center gap-1"
+                >
+                  <Edit3 size={14} /> Edit
+                </button>
+              ) : (
+                <button
+                  onClick={handleSave}
+                  className="text-xs text-green-600 font-semibold"
                 >
                   Save
                 </button>
+              )
+            ) : (
+              <p className="text-red-500 text-xs">Sign in to edit</p>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            {/* Mobile Number */}
+            <div>
+              <label className="font-medium">Mobile:</label>
+              {editMode ? (
+                verifyStep ? (
+                  <div className="flex gap-2 mt-2">
+                    <input
+                      type="text"
+                      placeholder="Enter OTP"
+                      className="border px-2 py-1 rounded w-full"
+                      value={otpInput}
+                      onChange={(e) => setOtpInput(e.target.value)}
+                    />
+                    <button
+                      onClick={verifyOtp}
+                      className="bg-brandBlue text-white px-3 py-1 rounded text-sm"
+                    >
+                      Verify
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={user.phone || ""}
+                      onChange={handleInputChange}
+                      className="border px-2 py-1 rounded w-full"
+                    />
+                    <button
+                      onClick={generateOtp}
+                      className="text-xs text-brandBlue"
+                    >
+                      Get OTP
+                    </button>
+                  </div>
+                )
               ) : (
-                <button
-                  onClick={() => setEditMode(true)}
-                  className="bg-brandBlue text-white px-6 py-2 rounded font-bold hover:bg-[#2DA7ED]"
-                >
-                  Edit Profile
-                </button>
+                <p>{user?.phone || "Not added"}</p>
               )}
-              <button
-                onClick={handleSignOut}
-                className="bg-red-500 text-white px-6 py-2 rounded font-bold hover:bg-red-600"
-              >
-                Sign Out
-              </button>
             </div>
+
+            {/* Address */}
+            <div>
+              <label className="font-medium">Address:</label>
+              {editMode ? (
+                <input
+                  type="text"
+                  name="address"
+                  value={user.address || ""}
+                  onChange={handleInputChange}
+                  className="border px-2 py-1 rounded w-full"
+                />
+              ) : (
+                <p>{user?.address || "Not added"}</p>
+              )}
+            </div>
+
+            {/* DOB */}
+            <div>
+              <label className="font-medium">Date of Birth:</label>
+              {editMode ? (
+                <input
+                  type="date"
+                  name="dob"
+                  value={user.dob || ""}
+                  onChange={handleInputChange}
+                  className="border px-2 py-1 rounded w-full"
+                />
+              ) : (
+                <p>{user?.dob || "Not added"}</p>
+              )}
+            </div>
+
+            {/* Gender */}
+            <div>
+              <label className="font-medium">Gender:</label>
+              {editMode ? (
+                <select
+                  name="gender"
+                  value={user.gender || ""}
+                  onChange={handleInputChange}
+                  className="border px-2 py-1 rounded w-full"
+                >
+                  <option value="">Select</option>
+                  <option>Male</option>
+                  <option>Female</option>
+                  <option>Other</option>
+                </select>
+              ) : (
+                <p>{user?.gender || "Not specified"}</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Links */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <button
+            onClick={() => navigate("/wallet")}
+            className="flex justify-between items-center bg-white p-4 rounded shadow"
+          >
+            <span className="font-medium">My Wallet</span>
+            <ArrowRight />
+          </button>
+          <button
+            onClick={() => navigate("/my-coupons")}
+            className="flex justify-between items-center bg-white p-4 rounded shadow"
+          >
+            <span className="font-medium">My Coupons</span>
+            <ArrowRight />
+          </button>
+          <button
+            onClick={handleLogout}
+            className="flex justify-between items-center bg-white p-4 rounded shadow text-red-500"
+          >
+            <span className="font-medium">Logout</span>
+            <LogOut />
+          </button>
+        </div>
+
+        {/* Terms */}
+        <div className="bg-white p-5 rounded shadow mb-6 text-sm">
+          <h3 className="font-semibold text-brandBlue mb-2">Terms & Conditions</h3>
+          <ul className="list-disc ml-6 space-y-1">
+            <li>Coins once added are <strong>non-refundable</strong>.</li>
+            <li>1 Coin is equivalent to <strong>₹1</strong>.</li>
+            <li>Coupons are <strong>non-returnable</strong> unless valid reasons are provided.</li>
+            <li>
+              For any issues or refunds, visit the{" "}
+              <span
+                className="text-brandBlue cursor-pointer underline"
+                onClick={() => navigate("/query")}
+              >
+                Query
+              </span>{" "}
+              page.
+            </li>
+          </ul>
+        </div>
+
+        {/* User Rating */}
+        <div className="bg-white p-4 rounded shadow flex flex-col gap-2 items-start">
+          <span className="font-medium">Rate us</span>
+          <div className="flex gap-1 text-yellow-400">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                onClick={() => setUserRating(i + 1)}
+                fill={userRating > i ? "#facc15" : "none"}
+                stroke="#facc15"
+                className="cursor-pointer"
+              />
+            ))}
           </div>
         </div>
       </div>
@@ -243,4 +282,4 @@ const Profile = () => {
   );
 };
 
-export default Profile;
+export default ProfilePage;

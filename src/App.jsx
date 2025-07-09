@@ -14,9 +14,9 @@ function App() {
       <Navbar />
       <Hero />
       <FeaturedDeals />
+      <Categories />
       <HowItWorks />
       <Testimonials />
-      <Categories />
       <CTA />
       <Footer />
     </>

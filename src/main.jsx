@@ -9,8 +9,7 @@ import Profile from "./components/Profile";
 import Query from "./components/Query";
 import Coupons from "./components/Coupons";
 import MyCoupons from "./components/MyCoupons";
-import AddCoinsPage from "./components/AddCoinsPage"; 
-import TransactionHistory from "./components/TransactionHistory";
+import WalletPage from "./components/Wallet"; 
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -23,8 +22,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/query" element={<Query />} />
         <Route path="/coupons" element={<Coupons />} />    
         <Route path="/my-coupons" element={<MyCoupons />} />
-        <Route path="/add-coins" element={<AddCoinsPage />} />
-        <Route path="/transactions" element={<TransactionHistory />} />
+        <Route path="/wallet" element={<WalletPage />} />
+
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

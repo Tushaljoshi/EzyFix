@@ -19,7 +19,7 @@ const initialReviews = [
   { name: "Aman", rating: 5, comment: "Great value for money!" },
   { name: "Riya", rating: 4, comment: "Tasty food and quick service." },
 ];
-
+const MIN_COIN_BALANCE = 100;
 const CouponsPage = () => {
   const [selectedCategory, setSelectedCategory] = useState("All Deals");
   const [selectedCoupon, setSelectedCoupon] = useState(null);
@@ -27,6 +27,12 @@ const CouponsPage = () => {
   const [reviews, setReviews] = useState(initialReviews);
   const [visibleReviews, setVisibleReviews] = useState(2);
   const [newReview, setNewReview] = useState({ name: "", rating: 5, comment: "" });
+  const [walletBalance, setWalletBalance] = useState(0);
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("loggedInUser"));
+    setWalletBalance(user?.wallet || 0);
+  }, []);
 
   const filteredCoupons = selectedCategory === "All Deals"
     ? trendingCoupons
@@ -42,17 +48,41 @@ const CouponsPage = () => {
 
   const handleBuyNow = () => {
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (!user) return alert("Please sign in first.");
-    const cost = quantity * selectedCoupon.price;
-    if (user.wallet < cost) return alert("Insufficient coins in wallet.");
+    if (!user) {
+      alert("⚠️ Please sign in first.");
+      return;
+    }
 
-    user.wallet -= cost;
+    const cost = quantity * selectedCoupon.price;
+    const currentBalance = Number(user.wallet);
+
+    if (currentBalance < cost) {
+      alert("❌ Insufficient coins in wallet. Redirecting to Add Coins...");
+      window.location.href = "/wallet";
+      return;
+    }
+
+    const newBalance = currentBalance - cost;
+    user.wallet = newBalance;
     localStorage.setItem("loggedInUser", JSON.stringify(user));
+    setWalletBalance(newBalance);
 
     const purchased = JSON.parse(localStorage.getItem("purchasedCoupons")) || [];
     purchased.push({ ...selectedCoupon, quantity });
     localStorage.setItem("purchasedCoupons", JSON.stringify(purchased));
-    alert("Purchase successful!");
+
+    const transactionHistory = JSON.parse(localStorage.getItem("transactionHistory")) || [];
+    transactionHistory.push({
+      id: Date.now(),
+      title: selectedCoupon.title,
+      amount: cost,
+      type: "Purchase",
+      date: new Date().toLocaleString(),
+    });
+    localStorage.setItem("transactionHistory", JSON.stringify(transactionHistory));
+
+    window.dispatchEvent(new Event("storage"));
+    alert("✅ Purchase successful!");
     setSelectedCoupon(null);
   };
 
@@ -124,7 +154,7 @@ const CouponsPage = () => {
                 }}
                 className="bg-white shadow rounded-lg overflow-hidden cursor-pointer hover:shadow-lg"
               >
-                <img src="https://via.placeholder.com/400x300" alt="Coupon" className="w-full h-40 object-cover" />
+                <img src="#" alt="Coupon" className="w-full h-40 object-cover" />
                 <div className="p-4">
                   <h3 className="font-semibold text-gray-800">{coupon.title}</h3>
                   <p className="text-sm text-gray-500">Save up to 50% off on top {coupon.category.toLowerCase()} offers.</p>
@@ -142,7 +172,7 @@ const CouponsPage = () => {
               <button onClick={() => setSelectedCoupon(null)} className="absolute top-2 right-3 text-xl text-gray-400 hover:text-gray-600">×</button>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <img src="https://via.placeholder.com/400x300" alt="Coupon" className="w-full h-64 object-cover rounded mb-4" />
+                  <img src="#" alt="Coupon" className="w-full h-64 object-cover rounded mb-4" />
                   <p className="text-sm text-gray-500">Expiry Date: <strong>31st Dec 2025</strong></p>
                 </div>
                 <div>

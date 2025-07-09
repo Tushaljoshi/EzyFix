@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
-const MIN_COIN_BALANCE = 20;
+const MIN_COIN_BALANCE = 100;
 
 const MyCoupons = () => {
   const [walletBalance, setWalletBalance] = useState(0);
@@ -82,6 +82,27 @@ const MyCoupons = () => {
     alert("✅ Coupon purchased successfully!");
   };
 
+  const handleRedeem = (coupon) => {
+    const updatedCoupons = purchasedCoupons.map((c) =>
+      c.id === coupon.id ? { ...c, status: "Redeemed", redeemedAt: new Date().toLocaleDateString() } : c
+    );
+    const redeemedCoupon = {
+      couponId: coupon.id,
+      code: coupon.code || "asd123xyz",
+      type: coupon.category || "General",
+      expireDate: coupon.validTill,
+      price: coupon.price,
+    };
+
+    const updatedRedeemed = [...redeemedCoupons, redeemedCoupon];
+    setPurchasedCoupons(updatedCoupons);
+    setRedeemedCoupons(updatedRedeemed);
+
+    localStorage.setItem("purchasedCoupons", JSON.stringify(updatedCoupons));
+    localStorage.setItem("redeemedCoupons", JSON.stringify(updatedRedeemed));
+    alert("🎉 Coupon redeemed successfully!");
+  };
+
   return (
     <div className="bg-gray-50 min-h-screen">
       <Navbar />
@@ -130,7 +151,7 @@ const MyCoupons = () => {
               <p className="text-lg font-bold text-brandBlue mt-1">🪙{coupon.price}</p>
               <p className="text-sm text-gray-500 mb-3">Valid till: {coupon.validTill}</p>
               <div className="flex justify-between">
-                <button className="bg-brandBlue text-white px-4 py-1 rounded text-sm">Redeem</button>
+                <button className="bg-brandBlue text-white px-4 py-1 rounded text-sm" onClick={() => handleRedeem(coupon)}>Redeem</button>
                 <button onClick={() => setShowDetails(true)} className="text-sm text-brandBlue underline">Details</button>
               </div>
             </div>
@@ -155,6 +176,33 @@ const MyCoupons = () => {
           ))}
         </div>
 
+        {/* Redeemed Coupons Section */}
+        <h2 className="text-2xl font-bold mt-12 mb-4">Redeemed Coupons</h2>
+        <div className="overflow-x-auto bg-white rounded shadow">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="bg-gray-100 text-gray-700">
+                <th className="text-left p-3">Coupon ID</th>
+                <th className="text-left p-3">Coupon Code</th>
+                <th className="text-left p-3">Type</th>
+                <th className="text-left p-3">Expiry</th>
+                <th className="text-left p-3">Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              {redeemedCoupons.map((c, idx) => (
+                <tr key={idx} className="border-t">
+                  <td className="p-3">{c.couponId}</td>
+                  <td className="p-3">{c.code}</td>
+                  <td className="p-3">{c.type}</td>
+                  <td className="p-3">{c.expireDate}</td>
+                  <td className="p-3">🪙{c.price}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
         {showDetails && (
           <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex justify-center items-center">
             <div className="bg-white p-6 rounded shadow w-full max-w-md">
@@ -162,7 +210,7 @@ const MyCoupons = () => {
               <button onClick={() => setShowDetails(false)} className="mt-4 w-full bg-brandBlue text-white py-2 rounded">Close</button>
             </div>
           </div>
-        )}
+        )} 
       </div>
       <Footer />
     </div>

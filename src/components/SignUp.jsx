@@ -58,8 +58,9 @@ const SignUp = () => {
       avatar: `https://i.pravatar.cc/150?u=${email}`,
     };
 
-    localStorage.setItem("user", JSON.stringify(newUser));
-    localStorage.setItem("loggedInUser", JSON.stringify(newUser));
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    users.push(newUser);
+    localStorage.setItem("users", JSON.stringify(users));
 
     alert("Account created successfully!");
     navigate("/");

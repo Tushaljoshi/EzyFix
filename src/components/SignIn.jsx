@@ -16,7 +16,9 @@ const SignIn = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const storedUser = JSON.parse(localStorage.getItem("user"));
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    const storedUser = users.find(u => u.email === email && u.password === password);
+
 
     if (!storedUser) {
       alert("No user found. Please sign up first.");
@@ -94,8 +96,8 @@ const SignIn = () => {
           {resetMode
             ? "Reset Password"
             : otpLoginMode
-            ? "Sign In with OTP"
-            : "Sign In to EzyFix"}
+              ? "Sign In with OTP"
+              : "Sign In to EzyFix"}
         </h2>
 
         {/* ------- Email/Password Login ------- */}

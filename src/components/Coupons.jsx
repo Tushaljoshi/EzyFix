@@ -2,24 +2,25 @@ import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { FaStar } from "react-icons/fa";
+import Popup from "../components/Popup";
 
-const categories = [
-  "All Deals", "Food", "Retail", "Restaurants", "Education", "Health", "Sports",
-  "Hotels & Travels", "Online Shopping"
-];
+// Sample data
+const categories = ["All Deals", "Food", "Retail", "Restaurants", "Education", "Health", "Sports", "Hotels & Travels", "Online Shopping"];
 
 const trendingCoupons = [
-  { title: "Deep Home Clean", price: 250, category: "Home" },
-  { title: "Full Car Service", price: 250, category: "Services" },
-  { title: "Pro Gaming Headset", price: 250, category: "Electronics" },
-  { title: "Smart Thermostat", price: 250, category: "Electronics" },
+  { title: "Deep Home Clean", price: 250, category: "Home", location: "Delhi", shop: "Cleanify" },
+  { title: "Full Car Service", price: 250, category: "Services", location: "Mumbai", shop: "AutoFix" },
+  { title: "Pro Gaming Headset", price: 250, category: "Electronics", location: "Bangalore", shop: "GameZone" },
+  { title: "Smart Thermostat", price: 250, category: "Electronics", location: "Hyderabad", shop: "SmartHome" },
 ];
+
+const indianLocations = ["All India", "Delhi", "Mumbai", "Bangalore", "Hyderabad", "Chennai", "Kolkata", "Pune", "Ahmedabad", "Jaipur", "Lucknow", "Surat", "Bhopal", "Patna", "Indore"];
 
 const initialReviews = [
   { name: "Aman", rating: 5, comment: "Great value for money!" },
   { name: "Riya", rating: 4, comment: "Tasty food and quick service." },
 ];
-const MIN_COIN_BALANCE = 100;
+
 const CouponsPage = () => {
   const [selectedCategory, setSelectedCategory] = useState("All Deals");
   const [selectedCoupon, setSelectedCoupon] = useState(null);
@@ -28,144 +29,163 @@ const CouponsPage = () => {
   const [visibleReviews, setVisibleReviews] = useState(2);
   const [newReview, setNewReview] = useState({ name: "", rating: 5, comment: "" });
   const [walletBalance, setWalletBalance] = useState(0);
+  const [popup, setPopup] = useState({ open: false, message: "" });
+  const [userLocation, setUserLocation] = useState("All India");
 
+  const GOOGLE_MAPS_API_KEY = "AIzaSyBabxHzK5P5alWvPVutg3OQtMtVqt95bSY";
+
+  // Load user & detect city
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
     setWalletBalance(user?.wallet || 0);
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(position => {
+        const { latitude, longitude } = position.coords;
+
+        fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_MAPS_API_KEY}`)
+          .then(res => res.json())
+          .then(data => {
+            const city = data.results[0]?.address_components.find(comp =>
+              comp.types.includes("locality") || comp.types.includes("administrative_area_level_1")
+            )?.long_name;
+
+            if (city) setUserLocation(city);
+          }).catch(() => setUserLocation("All India"));
+      });
+    }
   }, []);
 
-  const filteredCoupons = selectedCategory === "All Deals"
-    ? trendingCoupons
-    : trendingCoupons.filter(coupon => coupon.category === selectedCategory);
+  // Popup handlers
+  const openPopup = (msg) => setPopup({ open: true, message: msg });
+  const closePopup = () => setPopup({ open: false, message: "" });
 
+  // Coupon filters
+  const filteredCoupons = trendingCoupons.filter(coupon => {
+    const catMatch = selectedCategory === "All Deals" || coupon.category === selectedCategory;
+    const locMatch = userLocation === "All India" || coupon.location === userLocation;
+    return catMatch && locMatch;
+  });
+
+  // Cart
   const handleAddToCart = () => {
     const cart = JSON.parse(localStorage.getItem("cartCoupons")) || [];
     cart.push({ ...selectedCoupon, quantity });
     localStorage.setItem("cartCoupons", JSON.stringify(cart));
-    alert("Coupon added to cart!");
+    openPopup("✅ Coupon added to cart!");
     setSelectedCoupon(null);
   };
 
+  // Buy
   const handleBuyNow = () => {
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (!user) {
-      alert("⚠️ Please sign in first.");
-      return;
-    }
+    if (!user) return openPopup("⚠️ Please sign in first.");
 
     const cost = quantity * selectedCoupon.price;
-    const currentBalance = Number(user.wallet);
-
-    if (currentBalance < cost) {
-      alert("❌ Insufficient coins in wallet. Redirecting to Add Coins...");
-      window.location.href = "/wallet";
+    if (user.wallet < cost) {
+      openPopup("❌ Not enough coins!");
+      setTimeout(() => window.location.href = "/wallet",1000);
       return;
     }
 
-    const newBalance = currentBalance - cost;
-    user.wallet = newBalance;
+    user.wallet -= cost;
     localStorage.setItem("loggedInUser", JSON.stringify(user));
-    setWalletBalance(newBalance);
+    setWalletBalance(user.wallet);
 
     const purchased = JSON.parse(localStorage.getItem("purchasedCoupons")) || [];
     purchased.push({ ...selectedCoupon, quantity });
     localStorage.setItem("purchasedCoupons", JSON.stringify(purchased));
 
-    const transactionHistory = JSON.parse(localStorage.getItem("transactionHistory")) || [];
-    transactionHistory.push({
+    const tx = JSON.parse(localStorage.getItem("transactionHistory")) || [];
+    tx.push({
       id: Date.now(),
       title: selectedCoupon.title,
       amount: cost,
       type: "Purchase",
-      date: new Date().toLocaleString(),
+      date: new Date().toLocaleString()
     });
-    localStorage.setItem("transactionHistory", JSON.stringify(transactionHistory));
+    localStorage.setItem("transactionHistory", JSON.stringify(tx));
 
     window.dispatchEvent(new Event("storage"));
-    alert("✅ Purchase successful!");
+    openPopup("✅ Purchase successful!");
     setSelectedCoupon(null);
   };
 
+  // Reviews
   const handleReviewSubmit = () => {
     if (newReview.name && newReview.comment) {
       setReviews([newReview, ...reviews]);
-      setVisibleReviews(visibleReviews + 1);
       setNewReview({ name: "", rating: 5, comment: "" });
+      openPopup("✅ Review submitted!");
     }
   };
 
-  const getCategorySlogan = (category) => {
-    const slogans = {
-      "Food": "Delicious Deals to Savor!",
-      "Retail": "Retail Therapy Starts Here!",
-      "Restaurants": "Dine Out with Savings!",
-      "Education": "Smart Deals for Smart Minds!",
-      "Health": "Healthy Savings for a Healthier You!",
-      "Sports": "Score Big with These Sports Deals!",
-      "Hotels & Travels": "Adventure Awaits with These Offers!",
-      "Online Shopping": "Your Cart Deserves Discounts!",
-      "Home": "Clean Up With These Savings!",
-      "Services": "Get More Done for Less!",
-      "Electronics": "Tech Deals You Can't Miss!"
-    };
-    return slogans[category] || "Unbeatable Deals Just for You!";
-  };
+  const getCategorySlogan = (category) => ({
+    Food: "Delicious Deals to Savor!",
+    Retail: "Retail Therapy Starts Here!",
+    Restaurants: "Dine Out with Savings!",
+    Education: "Smart Deals for Smart Minds!",
+    Health: "Healthy Savings for a Healthier You!",
+    Sports: "Score Big with These Sports Deals!",
+    "Hotels & Travels": "Adventure Awaits!",
+    "Online Shopping": "Cart Full of Savings!",
+    Home: "Clean Up With These Savings!",
+    Services: "Get More Done for Less!",
+    Electronics: "Tech Deals You Can't Miss!"
+  }[category] || "Unbeatable Deals Just for You!");
 
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col">
+      {popup.open && <Popup message={popup.message} onClose={closePopup} />}
       <Navbar />
       <main className="flex-grow">
         <section className="text-center py-16 bg-brandBlue">
           <h1 className="text-3xl font-bold text-white mb-2">
-            {selectedCategory === "All Deals" ? (
-              <>Discover <span className="text-yellow-300">Unbeatable</span> Deals</>
-            ) : (
-              <>{getCategorySlogan(selectedCategory)}</>
-            )}
+            {selectedCategory === "All Deals"
+              ? <>Discover <span className="text-yellow-300">Unbeatable</span> Deals</>
+              : getCategorySlogan(selectedCategory)}
           </h1>
-          {selectedCategory === "All Deals" && (
-            <p className="text-white">Find your next great coupon, from food to fashion, all in one place.</p>
-          )}
+          <p className="text-white">
+            {userLocation !== "All India" ? `Deals in ${userLocation}` : "Find your next deal across India"}
+          </p>
         </section>
 
         <section className="py-6">
-          <h2 className="text-center font-semibold text-gray-700 mb-4 text-lg">Explore Categories</h2>
-          <div className="flex flex-wrap justify-center gap-3 px-4">
+          <div className="flex flex-wrap justify-center items-center gap-3 px-4">
             {categories.map((cat, i) => (
-              <button
-                key={i}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-4 py-2 rounded-full border ${selectedCategory === cat ? "bg-brandBlue text-white" : "bg-white text-gray-700"}`}
-              >
+              <button key={i} onClick={() => setSelectedCategory(cat)}
+                className={`px-4 py-2 rounded-full border ${selectedCategory === cat ? "bg-brandBlue text-white" : "bg-white text-gray-700"}`}>
                 {cat}
               </button>
             ))}
+            <select value={userLocation} onChange={(e) => setUserLocation(e.target.value)} className="ml-2 border px-4 py-2 rounded-md">
+              {indianLocations.map((loc, idx) => <option key={idx} value={loc}>{loc}</option>)}
+            </select>
           </div>
         </section>
 
         <section className="py-10">
           <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 px-4">
             {filteredCoupons.map((coupon, idx) => (
-              <div
-                key={idx}
-                onClick={() => {
-                  setSelectedCoupon(coupon);
-                  setQuantity(1);
-                }}
-                className="bg-white shadow rounded-lg overflow-hidden cursor-pointer hover:shadow-lg"
-              >
+              <div key={idx} onClick={() => {
+                const user = JSON.parse(localStorage.getItem("loggedInUser"));
+                if (!user) return openPopup("⚠️ Please sign in to view coupon details.");
+                setSelectedCoupon(coupon);
+                setQuantity(1);
+              }} className="bg-white shadow rounded-lg overflow-hidden cursor-pointer hover:shadow-lg">
                 <img src="#" alt="Coupon" className="w-full h-40 object-cover" />
                 <div className="p-4">
                   <h3 className="font-semibold text-gray-800">{coupon.title}</h3>
-                  <p className="text-sm text-gray-500">Save up to 50% off on top {coupon.category.toLowerCase()} offers.</p>
-                  <p className="text-sm text-gray-500">Expiry: 31st Dec 2025</p>
+                  <p className="text-sm text-gray-bold-500">Shop: {coupon.shop}</p>
+                  <p className="text-brandBlue text-xl-500">🪙 {coupon.price}</p>
+                  <p className="text-sm text-gray-500">Save up to 50% off on {coupon.category.toLowerCase()}.</p>
+                  
                   <button className="mt-3 w-full bg-brandBlue text-white py-2 rounded hover:bg-[#2DA7ED]">Grab Coupon</button>
                 </div>
               </div>
             ))}
           </div>
         </section>
-
         {selectedCoupon && (
           <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex justify-center items-center overflow-y-auto px-4 py-6">
             <div className="bg-white rounded-lg shadow-lg w-full max-w-5xl mx-auto relative p-6 max-h-[95vh] overflow-y-auto">

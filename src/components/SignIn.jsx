@@ -26,7 +26,7 @@ const SignIn = () => {
     if (storedUser.email === email && storedUser.password === password) {
       localStorage.setItem("loggedInUser", JSON.stringify(storedUser));
       alert("Login successful!");
-      navigate("/profile");
+      navigate("/");
     } else {
       alert("Invalid credentials. Please try again.");
     }
@@ -70,7 +70,7 @@ const SignIn = () => {
       // Successful OTP Login
       localStorage.setItem("loggedInUser", JSON.stringify(storedUser));
       alert("Login successful!");
-      navigate("/profile");
+      navigate("/");
     } else {
       // Reset Password Flow
       storedUser.password = newPassword;

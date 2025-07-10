@@ -79,11 +79,11 @@ const CouponsPage = () => {
   // Buy
   const handleBuyNow = () => {
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (!user) return openPopup("⚠️ Please sign in first.");
+    if (!user) return openPopup("Please sign in first.");
 
     const cost = quantity * selectedCoupon.price;
     if (user.wallet < cost) {
-      openPopup("❌ Not enough coins!");
+      openPopup("❌ Not enough coins! Please add Coins");
       setTimeout(() => window.location.href = "/wallet",1000);
       return;
     }
@@ -169,7 +169,7 @@ const CouponsPage = () => {
             {filteredCoupons.map((coupon, idx) => (
               <div key={idx} onClick={() => {
                 const user = JSON.parse(localStorage.getItem("loggedInUser"));
-                if (!user) return openPopup("⚠️ Please sign in to view coupon details.");
+                if (!user) return openPopup("Please sign in to view coupon details.");
                 setSelectedCoupon(coupon);
                 setQuantity(1);
               }} className="bg-white shadow rounded-lg overflow-hidden cursor-pointer hover:shadow-lg">

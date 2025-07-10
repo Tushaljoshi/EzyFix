@@ -94,18 +94,18 @@ const WalletPage = () => {
               key={amt}
               onClick={() => {
                 setSelectedAmount(amt);
-                setCustomAmount("");
+                setCustomAmount(String(amt)); // ✅ Fill input too
               }}
-              className={`py-2 rounded border text-sm font-medium ${
-                selectedAmount === amt
+              className={`py-2 rounded border text-sm font-medium ${selectedAmount === amt
                   ? "bg-brandBlue text-white"
                   : "bg-white border-gray-300 text-gray-700"
-              }`}
+                }`}
             >
               ₹{amt}
             </button>
           ))}
         </div>
+
         <input
           type="number"
           placeholder="₹ Enter custom amount"

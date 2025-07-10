@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import Popup from "../components/Popup"; // ✅ Make sure this path is correct
 
 const MIN_COIN_BALANCE = 100;
 
@@ -12,6 +13,10 @@ const MyCoupons = () => {
   const [redeemedCoupons, setRedeemedCoupons] = useState([]);
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [popup, setPopup] = useState({ open: false, message: "" });
+
+  const openPopup = (message) => setPopup({ open: true, message });
+  const closePopup = () => setPopup({ open: false, message: "" });
 
   const fetchUserData = () => {
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
@@ -41,13 +46,13 @@ const MyCoupons = () => {
   const handleBuyNow = (coupon) => {
     const user = JSON.parse(localStorage.getItem("loggedInUser"));
     if (!user) {
-      alert("Please sign in.");
+      openPopup("Please sign in to buy a coupon.");
       return;
     }
 
     const price = coupon.price || 250;
     if (walletBalance < MIN_COIN_BALANCE || walletBalance < price) {
-      alert("❌ Insufficient coins. Minimum 100 coins required.");
+      openPopup("❌ Insufficient coins. Minimum 100 coins required.");
       return;
     }
 
@@ -78,8 +83,7 @@ const MyCoupons = () => {
     }
 
     window.dispatchEvent(new Event("storage"));
-
-    alert("✅ Coupon purchased successfully!");
+    openPopup("✅ Coupon purchased successfully!");
   };
 
   const handleRedeem = (coupon) => {
@@ -100,12 +104,17 @@ const MyCoupons = () => {
 
     localStorage.setItem("purchasedCoupons", JSON.stringify(updatedCoupons));
     localStorage.setItem("redeemedCoupons", JSON.stringify(updatedRedeemed));
-    alert("🎉 Coupon redeemed successfully!");
+    openPopup("🎉 Coupon redeemed successfully!");
   };
 
   return (
     <div className="bg-gray-50 min-h-screen">
       <Navbar />
+
+      {popup.open && (
+        <Popup title="Notice" message={popup.message} onClose={closePopup} />
+      )}
+
       <div className="max-w-7xl mx-auto p-6">
         {isUserLoggedIn ? (
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-10 text-center">
@@ -176,7 +185,6 @@ const MyCoupons = () => {
           ))}
         </div>
 
-        {/* Redeemed Coupons Section */}
         <h2 className="text-2xl font-bold mt-12 mb-4">Redeemed Coupons</h2>
         <div className="overflow-x-auto bg-white rounded shadow">
           <table className="min-w-full text-sm">
@@ -210,7 +218,7 @@ const MyCoupons = () => {
               <button onClick={() => setShowDetails(false)} className="mt-4 w-full bg-brandBlue text-white py-2 rounded">Close</button>
             </div>
           </div>
-        )} 
+        )}
       </div>
       <Footer />
     </div>

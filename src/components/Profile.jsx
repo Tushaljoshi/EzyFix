@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, LogOut, Edit3, Star } from "lucide-react";
 import Navbar from "../components/Navbar";
+import Popup from "../components/Popup"; // ✅ Import popup
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -9,6 +10,7 @@ const ProfilePage = () => {
   const [editMode, setEditMode] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [userRating, setUserRating] = useState(0);
+  const [popup, setPopup] = useState({ open: false, title: "", message: "" }); // ✅ Popup state
 
   useEffect(() => {
     const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
@@ -32,28 +34,52 @@ const ProfilePage = () => {
     if (!file) return;
     const reader = new FileReader();
     reader.onloadend = () => {
+      const updatedUser = { ...user, profileImage: reader.result };
       setImagePreview(reader.result);
-      setUser({ ...user, profileImage: reader.result });
+      setUser(updatedUser);
+      localStorage.setItem("loggedInUser", JSON.stringify(updatedUser));
     };
     reader.readAsDataURL(file);
   };
 
   const handleSave = () => {
-    if (!user) return alert("You must be signed in to save changes.");
+    if (!user) {
+      setPopup({
+        open: true,
+        title: "Sign In Required",
+        message: "You must be signed in to save changes.",
+      });
+      return;
+    }
     localStorage.setItem("loggedInUser", JSON.stringify(user));
     setEditMode(false);
-    alert("✅ Profile updated successfully.");
+    setPopup({
+      open: true,
+      title: "Profile Updated",
+      message: "✅ Your profile has been updated successfully.",
+    });
   };
 
   return (
     <div className="bg-gray-50 min-h-screen">
+      {popup.open && (
+        <Popup
+          title={popup.title}
+          message={popup.message}
+          onClose={() => setPopup({ open: false, title: "", message: "" })}
+        />
+      )}
+
       <Navbar />
       <div className="max-w-6xl mx-auto py-10 px-4 text-sm text-gray-800">
         {/* Profile Header */}
         <div className="flex items-center gap-4 mb-6">
           <div className="relative w-20 h-20">
             <img
-              src={imagePreview || "https://cdn-icons-png.flaticon.com/512/847/847969.png"}
+              src={
+                imagePreview ||
+                "https://cdn-icons-png.flaticon.com/512/847/847969.png"
+              }
               alt="Profile"
               className="w-full h-full rounded-full object-cover border"
             />
@@ -98,7 +124,6 @@ const ProfilePage = () => {
           </div>
 
           <div className="space-y-3">
-            {/* Mobile Number */}
             <div>
               <label className="font-medium">Mobile:</label>
               {editMode ? (
@@ -114,7 +139,6 @@ const ProfilePage = () => {
               )}
             </div>
 
-            {/* Address */}
             <div>
               <label className="font-medium">Address:</label>
               {editMode ? (
@@ -130,7 +154,6 @@ const ProfilePage = () => {
               )}
             </div>
 
-            {/* DOB */}
             <div>
               <label className="font-medium">Date of Birth:</label>
               {editMode ? (
@@ -146,7 +169,6 @@ const ProfilePage = () => {
               )}
             </div>
 
-            {/* Gender */}
             <div>
               <label className="font-medium">Gender:</label>
               {editMode ? (
@@ -206,7 +228,7 @@ const ProfilePage = () => {
           </ul>
         </div>
 
-        {/* User Rating */}
+        {/* Rating */}
         <div className="bg-white p-4 rounded shadow flex flex-col gap-2 items-start mb-6">
           <span className="font-medium">Rate us</span>
           <div className="flex gap-1 text-yellow-400">
@@ -222,7 +244,7 @@ const ProfilePage = () => {
           </div>
         </div>
 
-        {/* Logout Button at Bottom */}
+        {/* Logout */}
         <button
           onClick={handleLogout}
           className="flex justify-between items-center bg-red w-55 p-4 rounded shadow text-white-500"

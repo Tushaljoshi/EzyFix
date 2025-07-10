@@ -3,7 +3,7 @@ import Navbar from "./Navbar";
 
 const Query = () => {
   const [user, setUser] = useState(null);
-  const [messages, setMessages] = useState([ ]);
+  const [messages, setMessages] = useState([]);
 
   const [input, setInput] = useState("");
 
@@ -63,13 +63,12 @@ const Query = () => {
           <div className="flex-1 overflow-y-auto pr-2">
             <div className="flex items-center gap-2 mb-4">
               <img
-                src={user?.avatar || "https://via.placeholder.com/40"}
+                src={user?.profileImage || "https://cdn-icons-png.flaticon.com/512/847/847969.png"}
                 alt="User"
-                className="rounded-full w-8 h-8"
+                className="rounded-full w-8 h-8 object-cover"
               />
               <h2 className="text-lg font-semibold">{user?.name || "Guest User"}</h2>
             </div>
-
             {messages.map((msg, index) => (
               <Message key={index} {...msg} />
             ))}

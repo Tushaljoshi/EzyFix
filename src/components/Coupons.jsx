@@ -83,8 +83,7 @@ const CouponsPage = () => {
 
     const cost = quantity * selectedCoupon.price;
     if (user.wallet < cost) {
-      openPopup("❌ Not enough coins! Please add Coins");
-      setTimeout(() => window.location.href = "/wallet",1000);
+      setTimeout(() => window.location.href = "/wallet");
       return;
     }
 

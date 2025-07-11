@@ -6,12 +6,25 @@ const Navbar = () => {
   const [user, setUser] = useState(null);
   const [showAuthPopup, setShowAuthPopup] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
     const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
     setUser(loggedInUser);
+
+    const updateCartCount = () => {
+      const cart = JSON.parse(localStorage.getItem("cartCoupons")) || [];
+      setCartCount(cart.length);
+    };
+
+    updateCartCount();
+    window.addEventListener("storage", updateCartCount);
+
+    return () => {
+      window.removeEventListener("storage", updateCartCount);
+    };
   }, [location.pathname]);
 
   const handleProtectedClick = (path) => {
@@ -58,19 +71,31 @@ const Navbar = () => {
 
           {/* Action Buttons */}
           <div className="flex items-center gap-3">
+            {/* Wallet */}
             <button onClick={handleWalletClick} className="text-gray-600 hover:text-brandBlue flex items-center gap-1">
               <Wallet className="w-5 h-5" />
               {user && (
-                <span className="text-sm text-brandBlue font-medium">🪙{parseFloat(user.wallet || 0).toFixed(0)}</span>
+                <span className="text-sm text-brandBlue font-medium">
+                  🪙{parseFloat(user.wallet || 0).toFixed(0)}
+                </span>
               )}
             </button>
 
-            <button onClick={handleCartClick} className="text-gray-600 hover:text-brandBlue">
-              <ShoppingCart className="w-5 h-5" />
-            </button>
+            {/* Cart with badge */}
+            <div className="relative">
+              <button onClick={handleCartClick} className="text-gray-600 hover:text-brandBlue">
+                <ShoppingCart className="w-5 h-5" />
+              </button>
+              {user && cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-0.5 py-0.3 rounded-full">
+                  {cartCount}
+                </span>
+              )}
+            </div>
 
+            {/* Auth or Greet */}
             {user ? (
-              <span className="text-sm text-blod-gray-700 hidden sm:inline">Hi, {user.name}</span>
+              <span className="text-sm text-gray-700 hidden sm:inline">Hi, {user.name}</span>
             ) : (
               <button
                 onClick={() => setShowAuthPopup(true)}
@@ -80,7 +105,7 @@ const Navbar = () => {
               </button>
             )}
 
-            {/* Hamburger Button for Mobile */}
+            {/* Mobile Menu Toggle */}
             <button
               className="md:hidden text-gray-600 hover:text-brandBlue"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

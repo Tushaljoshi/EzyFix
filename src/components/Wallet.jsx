@@ -16,6 +16,26 @@ const WalletPage = () => {
     setTransactionHistory(history);
   }, []);
 
+  const updateWalletAndHistory = (amount, type = "Top-up") => {
+    const updatedUser = {
+      ...user,
+      wallet: (user?.wallet || 0) + amount,
+    };
+    setUser(updatedUser);
+    localStorage.setItem("loggedInUser", JSON.stringify(updatedUser));
+
+    const newTransaction = {
+      id: Date.now(),
+      amount,
+      type,
+      date: new Date().toLocaleString(),
+    };
+
+    const updatedHistory = [newTransaction, ...transactionHistory];
+    setTransactionHistory(updatedHistory);
+    localStorage.setItem("transactionHistory", JSON.stringify(updatedHistory));
+  };
+
   const handleAddMoney = () => {
     const amount = selectedAmount || parseInt(customAmount);
     if (!amount || isNaN(amount) || amount < 100) {
@@ -23,30 +43,13 @@ const WalletPage = () => {
     }
 
     const options = {
-      key: "YOUR_RAZORPAY_KEY_ID", // Replace with your actual key
-      amount: amount * 100, // in paisa
+      key: "YOUR_RAZORPAY_KEY_ID", // Replace with your Razorpay key
+      amount: amount * 100,
       currency: "INR",
       name: "EzyFix Wallet",
       description: "Add Coins to Wallet",
-      handler: function (response) {
-        const updatedUser = {
-          ...user,
-          wallet: (user.wallet || 0) + amount,
-        };
-        setUser(updatedUser);
-        localStorage.setItem("loggedInUser", JSON.stringify(updatedUser));
-
-        const newTransaction = {
-          id: Date.now(),
-          amount,
-          type: "Top-up",
-          date: new Date().toLocaleString(),
-        };
-
-        const updatedHistory = [newTransaction, ...transactionHistory];
-        setTransactionHistory(updatedHistory);
-        localStorage.setItem("transactionHistory", JSON.stringify(updatedHistory));
-
+      handler: function () {
+        updateWalletAndHistory(amount, "Top-up");
         alert(`₹${amount} added successfully!`);
         setSelectedAmount(null);
         setCustomAmount("");
@@ -64,6 +67,12 @@ const WalletPage = () => {
     rzp.open();
   };
 
+  const handleTestTopUp = () => {
+    const amount = 500;
+    updateWalletAndHistory(amount, "Test Top-up");
+    alert(`🧪 ₹${amount} test coins added!`);
+  };
+
   return (
     <div className="min-h-screen bg-white text-gray-800">
       {/* Header */}
@@ -74,7 +83,7 @@ const WalletPage = () => {
         <h1 className="text-lg font-bold">My Wallet</h1>
       </div>
 
-      {/* Balance */}
+      {/* Wallet Balance */}
       <div className="bg-brandBlue text-white rounded-xl mx-4 mt-5 p-5 text-center shadow-md">
         <div className="flex justify-center mb-2">
           <Wallet className="mr-2" />
@@ -105,7 +114,7 @@ const WalletPage = () => {
             </button>
           ))}
         </div>
-
+        {/* Custom Input */}
         <input
           type="number"
           placeholder="₹ Enter custom amount"
@@ -116,12 +125,22 @@ const WalletPage = () => {
             setCustomAmount(e.target.value);
           }}
         />
+
+        {/* Add Buttons */}
         <button
           onClick={handleAddMoney}
           className="w-full bg-brandBlue text-white py-2 rounded-md text-sm font-semibold"
         >
           Add Money
         </button>
+
+        <button
+          onClick={handleTestTopUp}
+          className="w-full mt-2 bg-green-100 text-green-700 py-2 rounded-md text-sm font-semibold"
+        >
+          + Add ₹500 Test Coins
+        </button>
+
         <p className="text-xs text-gray-500 mt-2">Note: Minimum add amount is ₹100</p>
       </div>
 
@@ -133,7 +152,15 @@ const WalletPage = () => {
             {transactionHistory.map((tx) => (
               <li key={tx.id} className="flex justify-between py-2 border-b">
                 <span>{tx.date}</span>
-                <span className="text-green-600 font-semibold">+₹{tx.amount}</span>
+                <span
+                  className={`font-semibold ${
+                    tx.type === "Top-up" || tx.type === "Test Top-up"
+                      ? "text-green-600"
+                      : "text-red-500"
+                  }`}
+                >
+                  +₹{tx.amount}
+                </span>
               </li>
             ))}
           </ul>

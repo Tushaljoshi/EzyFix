@@ -11,6 +11,7 @@ import Coupons from "./components/Coupons";
 import MyCoupons from "./components/MyCoupons";
 import WalletPage from "./components/Wallet"; 
 
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>

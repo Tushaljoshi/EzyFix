@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Menu, X, ShoppingCart, Wallet } from "lucide-react";
 
+
 const Navbar = () => {
   const [user, setUser] = useState(null);
   const [showAuthPopup, setShowAuthPopup] = useState(false);
@@ -9,6 +10,9 @@ const Navbar = () => {
   const [cartCount, setCartCount] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
+  const lang = localStorage.getItem("language") || "en";
+  const isHindi = lang === "hi";
+
 
   useEffect(() => {
     const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));

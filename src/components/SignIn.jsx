@@ -189,7 +189,6 @@ const SignIn = () => {
             </button>
           </form>
         )}
-
         {/* ------- Footer Options ------- */}
         <div className="flex flex-col mt-6 gap-2 text-sm">
           <p className="text-gray-500">

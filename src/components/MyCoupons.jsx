@@ -135,7 +135,7 @@ const MyCoupons = () => {
               <p className="text-sm text-gray-600">Redeemed This Month</p>
             </div>
             <div>
-              <p className="text-xl font-bold text-brandBlue"></p>
+              <p className="text-xl font-bold text-brandBlue">0</p>
               <p className="text-sm text-gray-600">Expiring Soon</p>
             </div>
           </div>
@@ -149,13 +149,12 @@ const MyCoupons = () => {
             <div key={coupon.id} className="bg-white p-4 rounded shadow border">
               <div className="flex justify-between">
                 <h3 className="font-semibold text-gray-800 text-sm">{coupon.title}</h3>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${
-                  coupon.status === "Active"
+                <span className={`text-xs px-2 py-0.5 rounded-full ${coupon.status === "Active"
                     ? "bg-green-100 text-green-600"
                     : coupon.status === "Expired"
-                    ? "bg-red-100 text-red-500"
-                    : "bg-blue-100 text-blue-600"
-                }`}>{coupon.status}</span>
+                      ? "bg-red-100 text-red-500"
+                      : "bg-blue-100 text-blue-600"
+                  }`}>{coupon.status}</span>
               </div>
               <p className="text-lg font-bold text-brandBlue mt-1">🪙{coupon.price}</p>
               <p className="text-sm text-gray-500 mb-3">Valid till: {coupon.validTill}</p>
@@ -185,31 +184,24 @@ const MyCoupons = () => {
           ))}
         </div>
 
-        <h2 className="text-2xl font-bold mt-12 mb-4">Redeemed Coupons</h2>
-        <div className="overflow-x-auto bg-white rounded shadow">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="bg-gray-100 text-gray-700">
-                <th className="text-left p-3">Coupon ID</th>
-                <th className="text-left p-3">Coupon Code</th>
-                <th className="text-left p-3">Type</th>
-                <th className="text-left p-3">Expiry</th>
-                <th className="text-left p-3">Price</th>
-              </tr>
-            </thead>
-            <tbody>
-              {redeemedCoupons.map((c, idx) => (
-                <tr key={idx} className="border-t">
-                  <td className="p-3">{c.couponId}</td>
-                  <td className="p-3">{c.code}</td>
-                  <td className="p-3">{c.type}</td>
-                  <td className="p-3">{c.expireDate}</td>
-                  <td className="p-3">🪙{c.price}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <h2 className="text-xl font-semibold mb-4">Purchased Coupons</h2>
+        {purchasedCoupons.map((coupon, idx) => (
+          <div key={idx} className="border rounded p-4 mb-4 bg-white">
+            <h3 className="font-bold text-gray-800">{coupon.title}</h3>
+            <p className="text-sm text-gray-600">🎫 Code: {coupon.redemption_code || "Not available"}</p>
+            <p className="text-sm text-gray-600">Status: {coupon.status}</p>
+            <p className="text-sm text-gray-600">Valid Till: {coupon.validTill}</p>
+            {coupon.status === "Active" && !isExpired(coupon.validTill) && (
+              <button
+                className="bg-green-600 text-white px-4 py-2 rounded mt-2"
+                onClick={() => handleRedeem(coupon)}
+              >
+                Redeem
+              </button>
+            )}
+          </div>
+        ))}
+
 
         {showDetails && (
           <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex justify-center items-center">

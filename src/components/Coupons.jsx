@@ -5,7 +5,7 @@ import { FaStar } from "react-icons/fa";
 import Popup from "../components/Popup";
 
 // Sample data
-const categories = ["All Deals", "Food", "Retail", "Restaurants", "Education", "Health", "Sports", "Hotels & Travels", "Online Shopping"];
+const categories = ["All Deals", "Food", "Retail", "Restaurants","Entertainment", "Education", "Health", "Sports", "Hotels & Travels", "Online Shopping"];
 
 const trendingCoupons = [
   { title: "Deep Home Clean", price: 250, category: "Home", location: "Delhi", shop: "Cleanify" },
@@ -139,7 +139,7 @@ const CouponsPage = () => {
       {popup.open && <Popup message={popup.message} onClose={closePopup} />}
       <Navbar />
       <main className="flex-grow">
-        <section className="text-center py-16 bg-brandBlue">
+        <section className="text-center py-10 bg-brandBlue">
           <h1 className="text-3xl font-bold text-white mb-2">
             {selectedCategory === "All Deals"
               ? <>Discover <span className="text-yellow-300">Unbeatable</span> Deals</>

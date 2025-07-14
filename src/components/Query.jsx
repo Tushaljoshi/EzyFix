@@ -1,35 +1,76 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Navbar from "./Navbar";
+
+const presetQueries = [
+  "How do I redeem my coupon?",
+  "My payment failed, what should I do?",
+  "Can I get a refund on coins?",
+  "Coupon code not working",
+  "Need help with my transaction history"
+];
 
 const Query = () => {
   const [user, setUser] = useState(null);
-  const [messages, setMessages] = useState([]);
-
   const [input, setInput] = useState("");
+  const [messages, setMessages] = useState([
+    {
+      text: "Welcome to EzyFix Support. Please describe your issue or query in detail, and we will get back to you as soon as possible.",
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      isUser: false,
+    },
+  ]);
 
-  // ✅ Load logged-in user details
+  const chatRef = useRef();
+
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("loggedInUser"));
     if (storedUser) setUser(storedUser);
   }, []);
 
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      if (chatRef.current) {
+        chatRef.current.scrollTop = chatRef.current.scrollHeight;
+      }
+    }, 100);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!input.trim()) return;
 
-    const newMessage = {
-      text: input,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    sendMessage(input);
+    setInput("");
+  };
+
+  const sendMessage = (text) => {
+    const newMsg = {
+      text,
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       isUser: true,
     };
 
-    setMessages((prev) => [...prev, newMessage]);
-    setInput("");
+    const reply = {
+      text: "Thanks for reaching out. Our support team will respond shortly.",
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      isUser: false,
+    };
+
+    setMessages((prev) => [...prev, newMsg, reply]);
+    scrollToBottom();
+  };
+
+  const handleQueryClick = (text) => {
+    sendMessage(text);
   };
 
   const Message = ({ text, time, isUser }) => (
     <div className={`my-2 ${isUser ? "text-right" : "text-left"}`}>
-      <div className={`inline-block px-4 py-2 rounded-lg max-w-xs text-sm ${isUser ? "bg-[#3BB5FF] text-white" : "bg-gray-100 text-gray-800"}`}>
+      <div
+        className={`inline-block px-4 py-2 rounded-lg max-w-xs text-sm ${
+          isUser ? "bg-[#3BB5FF] text-white" : "bg-gray-100 text-gray-800"
+        }`}
+      >
         {text}
       </div>
       <div className="text-xs text-gray-400">{time}</div>
@@ -42,25 +83,39 @@ const Query = () => {
 
       <div className="flex flex-1">
         {/* Sidebar */}
-        <aside className="w-1/4 border-r p-4 hidden md:block">
+        <aside className="w-1/4 border-r p-4 hidden md:flex flex-col">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <span>💬</span> Queries
           </h2>
-          <div className="flex justify-between items-center mb-4 text-[#3BB5FF] font-semibold">
-            <div className="flex items-center gap-2">
-              <img src="https://i.pravatar.cc/40?img=3" alt="avatar" className="rounded-full w-8 h-8" />
-              <div>
-                <div className="text-sm text-black font-medium">TEAM EZYFIX</div>
-                <div className="text-xs text-gray-600">Sure, I will check that</div>
-              </div>
+
+          <div className="flex items-center gap-2 mb-6">
+            <img
+              src="/logo.png"
+              alt="EzyFix"
+              className="w-10 h-10 object-contain rounded"
+            />
+            <div>
+              <div className="text-sm font-semibold text-black">EzyFix Support</div>
+              <div className="text-xs text-gray-600">Ask your queries here</div>
             </div>
-            <div className="text-xs text-gray-400">5 min ago</div>
+          </div>
+
+          <div className="space-y-2">
+            {presetQueries.map((query, i) => (
+              <button
+                key={i}
+                onClick={() => handleQueryClick(query)}
+                className="w-full text-left text-sm text-[#3BB5FF] hover:bg-[#f0f9ff] p-2 rounded"
+              >
+                {query}
+              </button>
+            ))}
           </div>
         </aside>
 
         {/* Chat Window */}
         <main className="w-full md:w-3/4 flex flex-col justify-between p-6">
-          <div className="flex-1 overflow-y-auto pr-2">
+          <div ref={chatRef} className="flex-1 overflow-y-auto pr-2">
             <div className="flex items-center gap-2 mb-4">
               <img
                 src={user?.profileImage || "https://cdn-icons-png.flaticon.com/512/847/847969.png"}

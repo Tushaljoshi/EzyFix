@@ -31,6 +31,7 @@ const CouponsPage = () => {
   const [walletBalance, setWalletBalance] = useState(0);
   const [popup, setPopup] = useState({ open: false, message: "" });
   const [userLocation, setUserLocation] = useState("All India");
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const GOOGLE_MAPS_API_KEY = "AIzaSyBabxHzK5P5alWvPVutg3OQtMtVqt95bSY";
 
@@ -178,7 +179,7 @@ const CouponsPage = () => {
                   <p className="text-sm text-gray-bold-500">Shop: {coupon.shop}</p>
                   <p className="text-brandBlue text-xl-500">🪙 {coupon.price}</p>
                   <p className="text-sm text-gray-500">Save up to 50% off on {coupon.category.toLowerCase()}.</p>
-                  
+
                   <button className="mt-3 w-full bg-brandBlue text-white py-2 rounded hover:bg-[#2DA7ED]">Grab Coupon</button>
                 </div>
               </div>
@@ -188,17 +189,48 @@ const CouponsPage = () => {
         {selectedCoupon && (
           <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex justify-center items-center overflow-y-auto px-4 py-6">
             <div className="bg-white rounded-lg shadow-lg w-full max-w-5xl mx-auto relative p-6 max-h-[95vh] overflow-y-auto">
-              <button onClick={() => setSelectedCoupon(null)} className="absolute top-2 right-3 text-xl text-gray-400 hover:text-gray-600">×</button>
+              <button
+                onClick={() => setSelectedCoupon(null)}
+                className="absolute top-2 right-3 text-xl text-gray-400 hover:text-gray-600"
+              >
+                ×
+              </button>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <img src="#" alt="Coupon" className="w-full h-64 object-cover rounded mb-4" />
-                  <p className="text-sm text-gray-500">Expiry Date: <strong>31st Dec 2025</strong></p>
+                  {/* Main Image */}
+                  <img
+                    src={selectedImage || selectedCoupon.image || "#"}
+                    alt="Coupon"
+                    className="w-full h-64 object-cover rounded mb-4 border"
+                  />
+
+                  {/* Thumbnail Images */}
+                  <div className="grid grid-cols-4 gap-2 mb-4">
+                    {[1, 2, 3, 4].map((i) => (
+                      <img
+                        key={i}
+                        src={`${selectedCoupon.image}?angle=${i}`} // Replace with actual angle URLs if available
+                        alt={`Thumbnail ${i}`}
+                        className="w-full h-16 object-cover border cursor-pointer rounded"
+                        onClick={() => setSelectedImage(`${selectedCoupon.image}?angle=${i}`)}
+                      />
+                    ))}
+                  </div>
+
+                  <p className="text-sm text-gray-500">
+                    Expiry Date: <strong>{selectedCoupon.validTill || "31st Dec 2025"}</strong>
+                  </p>
                 </div>
+
                 <div>
                   <h2 className="text-xl font-semibold text-gray-800 mb-2">{selectedCoupon.title}</h2>
                   <p className="text-brandBlue text-xl font-bold mb-2">🪙 {selectedCoupon.price}</p>
-                  <p className="text-gray-700 mb-4 text-sm">Save up to 50% off on top {selectedCoupon.category?.toLowerCase()} offers.</p>
+                  <p className="text-gray-700 mb-4 text-sm">
+                    Save up to 50% off on top {selectedCoupon.category?.toLowerCase()} offers.
+                  </p>
 
+                  {/* Quantity */}
                   <div className="mb-4">
                     <label className="block font-medium text-sm mb-1">Quantity</label>
                     <div className="flex items-center border rounded w-full">
@@ -208,7 +240,10 @@ const CouponsPage = () => {
                     </div>
                   </div>
 
-                  <p className="text-sm text-gray-600 mb-3">Total: <strong>🪙{selectedCoupon.price * quantity}</strong></p>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Total: <strong>🪙{selectedCoupon.price * quantity}</strong>
+                  </p>
+
                   <button
                     onClick={handleAddToCart}
                     className="w-full bg-brandBlue text-white py-2 rounded mb-2 hover:bg-[#2DA7ED]"
@@ -224,23 +259,32 @@ const CouponsPage = () => {
                 </div>
               </div>
 
+              {/* Reviews Section */}
               <div className="mt-6">
                 <h3 className="text-lg font-bold mb-2">Customer Reviews</h3>
                 {reviews.slice(0, visibleReviews).map((review, index) => (
                   <div key={index} className="border rounded p-3 mb-2">
                     <div className="flex justify-between items-center">
                       <span className="font-semibold text-gray-800">{review.name}</span>
-                      <span className="text-yellow-500 flex">{[...Array(review.rating)].map((_, i) => <FaStar key={i} />)}</span>
+                      <span className="text-yellow-500 flex">
+                        {[...Array(review.rating)].map((_, i) => (
+                          <FaStar key={i} />
+                        ))}
+                      </span>
                     </div>
                     <p className="text-sm text-gray-600 mt-1">{review.comment}</p>
                   </div>
                 ))}
                 {visibleReviews < reviews.length && (
-                  <button onClick={() => setVisibleReviews(visibleReviews + 2)} className="text-sm text-brandBlue hover:underline mt-2">
+                  <button
+                    onClick={() => setVisibleReviews(visibleReviews + 2)}
+                    className="text-sm text-brandBlue hover:underline mt-2"
+                  >
                     Load More Reviews
                   </button>
                 )}
 
+                {/* Review Form */}
                 <div className="mt-4">
                   <h4 className="font-semibold mb-2">Add Your Review</h4>
                   <input
@@ -259,23 +303,38 @@ const CouponsPage = () => {
                   <select
                     value={newReview.rating}
                     onChange={(e) => setNewReview({ ...newReview, rating: parseInt(e.target.value) })}
-                    className="border p-2 rounded mb-2"
+                    className="border p-2 rounded mb-2 w-full"
                   >
                     {[5, 4, 3, 2, 1].map((r) => (
-                      <option key={r} value={r}>{r} Star{r > 1 ? "s" : ""}</option>
+                      <option key={r} value={r}>
+                        {r} Star{r > 1 ? "s" : ""}
+                      </option>
                     ))}
                   </select>
-                  <button
-                    onClick={handleReviewSubmit}
-                    className="bg-brandBlue text-white px-4 py-2 rounded hover:bg-[#2DA7ED]"
-                  >
-                    Submit Review
-                  </button>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-2">
+                    <button
+                      onClick={handleReviewSubmit}
+                      className="bg-brandBlue text-white px-4 py-2 rounded hover:bg-[#2DA7ED] w-full sm:w-auto"
+                    >
+                      Submit Review
+                    </button>
+
+                    <a
+                      href="/query"
+                      className="text-sm px-4 py-2 rounded border border-brandBlue text-brandBlue hover:bg-blue-50 w-full sm:w-auto text-center"
+                    >
+                      Need Help?
+                    </a>
+                  </div>
+
                 </div>
               </div>
+
+
             </div>
           </div>
         )}
+
       </main>
       <Footer />
     </div>

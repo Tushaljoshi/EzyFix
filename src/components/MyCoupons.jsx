@@ -14,6 +14,11 @@ const MyCoupons = () => {
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [popup, setPopup] = useState({ open: false, message: "" });
+  const [visibleRedeemedCount, setVisibleRedeemedCount] = useState(5);
+  const [visibleCartCount, setVisibleCartCount] = useState(6);
+  const [visibleActiveCount, setVisibleActiveCount] = useState(6);
+
+
 
   const openPopup = (message) => setPopup({ open: true, message });
   const closePopup = () => setPopup({ open: false, message: "" });
@@ -96,7 +101,9 @@ const MyCoupons = () => {
       type: coupon.category || "General",
       expireDate: coupon.validTill,
       price: coupon.price,
+      redeemedAt: new Date().toLocaleString(),
     };
+
 
     const updatedRedeemed = [...redeemedCoupons, redeemedCoupon];
     setPurchasedCoupons(updatedCoupons);
@@ -150,10 +157,10 @@ const MyCoupons = () => {
               <div className="flex justify-between">
                 <h3 className="font-semibold text-gray-800 text-sm">{coupon.title}</h3>
                 <span className={`text-xs px-2 py-0.5 rounded-full ${coupon.status === "Active"
-                    ? "bg-green-100 text-green-600"
-                    : coupon.status === "Expired"
-                      ? "bg-red-100 text-red-500"
-                      : "bg-blue-100 text-blue-600"
+                  ? "bg-green-100 text-green-600"
+                  : coupon.status === "Expired"
+                    ? "bg-red-100 text-red-500"
+                    : "bg-blue-100 text-blue-600"
                   }`}>{coupon.status}</span>
               </div>
               <p className="text-lg font-bold text-brandBlue mt-1">🪙{coupon.price}</p>
@@ -167,41 +174,100 @@ const MyCoupons = () => {
         </div>
 
         <h2 className="text-2xl font-bold mt-12 mb-4">Coupons in Cart</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {cartCoupons.map((coupon) => (
-            <div key={coupon.id} className="bg-white p-4 rounded shadow border">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-semibold text-gray-800 text-sm">{coupon.title}</h3>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-600">In Cart</span>
-              </div>
-              <p className="text-lg font-bold text-brandBlue mb-2">🪙{coupon.price}</p>
-              <p className="text-sm text-gray-500 mb-4">Valid till: {coupon.validTill}</p>
-              <div className="flex justify-between">
-                <button onClick={() => handleBuyNow(coupon)} className="bg-brandBlue text-white px-4 py-1 rounded text-sm">Buy Now</button>
-                <button onClick={() => setShowDetails(true)} className="text-sm text-brandBlue underline">Details</button>
-              </div>
+        {cartCoupons.length === 0 ? (
+          <p className="text-gray-500">No coupons in cart.</p>
+        ) : (
+          <>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...cartCoupons]
+                .sort((a, b) => new Date(b.addedAt || b.createdAt || Date.now()) - new Date(a.addedAt || a.createdAt || Date.now()))
+                .slice(0, visibleCartCount)
+                .map((coupon) => (
+                  <div key={coupon.id} className="bg-white p-4 rounded shadow border">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-semibold text-gray-800 text-sm">{coupon.title}</h3>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-600">In Cart</span>
+                    </div>
+                    <p className="text-lg font-bold text-brandBlue mb-2">🪙{coupon.price}</p>
+                    <p className="text-sm text-gray-500 mb-4">Valid till: {coupon.validTill}</p>
+                    <div className="flex justify-between">
+                      <button
+                        onClick={() => handleBuyNow(coupon)}
+                        className="bg-brandBlue text-white px-4 py-1 rounded text-sm"
+                      >
+                        Buy Now
+                      </button>
+                      <button
+                        onClick={() => setShowDetails(true)}
+                        className="text-sm text-brandBlue underline"
+                      >
+                        Details
+                      </button>
+                    </div>
+                  </div>
+                ))}
             </div>
-          ))}
-        </div>
 
-        <h2 className="text-xl font-semibold mb-4">Purchased Coupons</h2>
-        {purchasedCoupons.map((coupon, idx) => (
-          <div key={idx} className="border rounded p-4 mb-4 bg-white">
-            <h3 className="font-bold text-gray-800">{coupon.title}</h3>
-            <p className="text-sm text-gray-600">🎫 Code: {coupon.redemption_code || "Not available"}</p>
-            <p className="text-sm text-gray-600">Status: {coupon.status}</p>
-            <p className="text-sm text-gray-600">Valid Till: {coupon.validTill}</p>
-            {coupon.status === "Active" && !isExpired(coupon.validTill) && (
-              <button
-                className="bg-green-600 text-white px-4 py-2 rounded mt-2"
-                onClick={() => handleRedeem(coupon)}
-              >
-                Redeem
-              </button>
+            {visibleCartCount < cartCoupons.length && (
+              <div className="text-center mt-4">
+                <button
+                  onClick={() => setVisibleCartCount((prev) => prev + 6)}
+                  className="text-sm text-brandBlue hover:underline"
+                >
+                  Load More
+                </button>
+              </div>
             )}
-          </div>
-        ))}
+          </>
+        )}
 
+        <h2 className="text-2xl font-bold mt-12 mb-4">Redeemed Coupons</h2>
+        {redeemedCoupons.length === 0 ? (
+          <p className="text-gray-500">No redeemed coupons yet.</p>
+        ) : (
+          <>
+            <div className="overflow-x-auto bg-white rounded shadow">
+              <table className="min-w-full text-sm text-left">
+                <thead>
+                  <tr className="bg-gray-100 text-gray-700 text-sm">
+                    <th className="p-3">Coupon ID</th>
+                    <th className="p-3">Coupon Code</th>
+                    <th className="p-3">Type</th>
+                    <th className="p-3">Expiry</th>
+                    <th className="p-3">Price</th>
+                    <th className="p-3">Redeemed At</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...redeemedCoupons]
+                    .sort((a, b) => new Date(b.redeemedAt) - new Date(a.redeemedAt)) // latest first
+                    .slice(0, visibleRedeemedCount)
+                    .map((c, idx) => (
+                      <tr key={idx} className="border-t hover:bg-gray-50">
+                        <td className="p-3">{c.couponId || "N/A"}</td>
+                        <td className="p-3">{c.code || "N/A"}</td>
+                        <td className="p-3">{c.type || "General"}</td>
+                        <td className="p-3">{c.expireDate || "N/A"}</td>
+                        <td className="p-3">🪙{c.price || 0}</td>
+                        <td className="p-3">{c.redeemedAt || "N/A"}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+
+            {visibleRedeemedCount < redeemedCoupons.length && (
+              <div className="text-center mt-4">
+                <button
+                  onClick={() => setVisibleRedeemedCount((prev) => prev + 5)}
+                  className="text-brandBlue hover:underline text-sm"
+                >
+                  Load More
+                </button>
+              </div>
+            )}
+          </>
+        )}
 
         {showDetails && (
           <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex justify-center items-center">
@@ -212,6 +278,43 @@ const MyCoupons = () => {
           </div>
         )}
       </div>
+      {/* How to Use Coupons Section */}
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        <h2 className="text-3xl font-bold text-gray-800 text-center mb-8">How to Use Coupons on EzyFix</h2>
+        <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-center">
+
+          <div className="bg-white shadow-md rounded-xl p-6">
+            <h3 className="text-xl font-semibold text-brandBlue mb-2">1. Sign In or Register</h3>
+            <p className="text-sm text-gray-600">Create an account or log in to access exclusive coupons, earn wallet coins, and manage your purchases.</p>
+          </div>
+
+          <div className="bg-white shadow-md rounded-xl p-6">
+            <h3 className="text-xl font-semibold text-brandBlue mb-2">2. Browse Coupons</h3>
+            <p className="text-sm text-gray-600">Explore categories like Food, Shopping, Travel, and more. Use filters and location detection to find nearby deals.</p>
+          </div>
+
+          <div className="bg-white shadow-md rounded-xl p-6">
+            <h3 className="text-xl font-semibold text-brandBlue mb-2">3. Add to Cart or Buy Now</h3>
+            <p className="text-sm text-gray-600">Add coupons to your cart to review later, or instantly buy them using your wallet coins with the “Buy Now” button.</p>
+          </div>
+
+          <div className="bg-white shadow-md rounded-xl p-6">
+            <h3 className="text-xl font-semibold text-brandBlue mb-2">4. Redeem Coupons</h3>
+            <p className="text-sm text-gray-600">Go to your “My Coupons” page and click “Redeem” to reveal the coupon code or barcode before use.</p>
+          </div>
+
+          <div className="bg-white shadow-md rounded-xl p-6">
+            <h3 className="text-xl font-semibold text-brandBlue mb-2">5. Use at Store or Online</h3>
+            <p className="text-sm text-gray-600">Show the coupon code at the billing counter or enter it online to enjoy the discount or deal instantly.</p>
+          </div>
+
+          <div className="bg-white shadow-md rounded-xl p-6">
+            <h3 className="text-xl font-semibold text-brandBlue mb-2">6. Track Your Activity</h3>
+            <p className="text-sm text-gray-600">Check your transaction history and redeemed coupons anytime in your dashboard. Stay updated with new offers!</p>
+          </div>
+        </div>
+      </div>
+
       <Footer />
     </div>
   );

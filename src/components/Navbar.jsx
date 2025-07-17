@@ -56,7 +56,7 @@ const Navbar = () => {
         <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
           {/* Logo Section */}
           <Link to="/" className="flex items-center gap-2">
-            <img src="/logo.png" alt="EzyFix Logo" className="w-8 h-8 object-contain" />
+            <img src="./src/ezyfix logo.jpg" alt="EzyFix Logo" className="w-8 h-8 object-contain" />
             <span className="text-xl font-bold text-brandBlue">EzyFix</span>
           </Link>
 

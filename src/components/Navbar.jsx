@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Menu, X, ShoppingCart, Wallet } from "lucide-react";
 
-
 const Navbar = () => {
   const [user, setUser] = useState(null);
   const [showAuthPopup, setShowAuthPopup] = useState(false);
@@ -11,8 +10,6 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const lang = localStorage.getItem("language") || "en";
-  const isHindi = lang === "hi";
-
 
   useEffect(() => {
     const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
@@ -25,10 +22,7 @@ const Navbar = () => {
 
     updateCartCount();
     window.addEventListener("storage", updateCartCount);
-
-    return () => {
-      window.removeEventListener("storage", updateCartCount);
-    };
+    return () => window.removeEventListener("storage", updateCartCount);
   }, [location.pathname]);
 
   const handleProtectedClick = (path) => {
@@ -41,18 +35,16 @@ const Navbar = () => {
   };
 
   const handleWalletClick = () => {
-    if (!user) {
-      setShowAuthPopup(true);
-    } else {
+    if (!user) setShowAuthPopup(true);
+    else {
       navigate("/wallet");
       setIsMobileMenuOpen(false);
     }
   };
 
   const handleCartClick = () => {
-    if (!user) {
-      setShowAuthPopup(true);
-    } else {
+    if (!user) setShowAuthPopup(true);
+    else {
       navigate("/my-coupons");
       setIsMobileMenuOpen(false);
     }
@@ -62,7 +54,11 @@ const Navbar = () => {
     <>
       <nav className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-          <Link to="/" className="text-xl font-bold text-brandBlue">EzyFix</Link>
+          {/* Logo Section */}
+          <Link to="/" className="flex items-center gap-2">
+            <img src="/logo.png" alt="EzyFix Logo" className="w-8 h-8 object-contain" />
+            <span className="text-xl font-bold text-brandBlue">EzyFix</span>
+          </Link>
 
           {/* Desktop Links */}
           <div className="hidden md:flex gap-6 text-sm font-medium items-center">
@@ -74,12 +70,12 @@ const Navbar = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             {/* Wallet */}
-            <button onClick={handleWalletClick} className="text-gray-600 hover:text-brandBlue flex items-center gap-1">
+            <button onClick={handleWalletClick} className="flex items-center gap-1 text-gray-600 hover:text-brandBlue">
               <Wallet className="w-5 h-5" />
               {user && (
-                <span className="text-sm text-brandBlue font-medium">
+                <span className="text-sm font-medium text-brandBlue">
                   🪙{parseFloat(user.wallet || 0).toFixed(0)}
                 </span>
               )}
@@ -87,17 +83,17 @@ const Navbar = () => {
 
             {/* Cart with badge */}
             <div className="relative">
-              <button onClick={handleCartClick} className="text-gray-600 hover:text-brandBlue">
+              <button onClick={handleCartClick} className="flex items-center text-gray-600 hover:text-brandBlue">
                 <ShoppingCart className="w-5 h-5" />
               </button>
               {user && cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-0.5 py-0.3 rounded-full">
+                <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-1 rounded-full">
                   {cartCount}
                 </span>
               )}
             </div>
 
-            {/* Auth or Greet */}
+            {/* Auth Button or Greeting */}
             {user ? (
               <span className="text-sm text-gray-700 hidden sm:inline">Hi, {user.name}</span>
             ) : (
@@ -109,7 +105,7 @@ const Navbar = () => {
               </button>
             )}
 
-            {/* Mobile Menu Toggle */}
+            {/* Mobile Toggle */}
             <button
               className="md:hidden text-gray-600 hover:text-brandBlue"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -131,7 +127,7 @@ const Navbar = () => {
         )}
       </nav>
 
-      {/* Sign In / Sign Up Popup */}
+      {/* Auth Popup */}
       {showAuthPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center px-4">
           <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full relative">
